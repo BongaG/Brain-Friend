@@ -1,116 +1,100 @@
 <?xml version="1.0" encoding="utf-8"?>
-<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:padding="24dp">
+    android:orientation="vertical"
+    android:background="#F8FAFC">
 
+    <!-- Simple Blue Header -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="vertical">
-
+        android:orientation="vertical"
+        android:background="#2563EB"
+        android:padding="24dp">
         <TextView
             android:id="@+id/welcome_text"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Hello!"
-            android:textSize="24sp"
+            android:text="Welcome, Pro"
+            android:textSize="26sp"
             android:textStyle="bold"
-            android:textColor="#0F172A" />
+            android:textColor="#FFFFFF" />
+    </LinearLayout>
 
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Here's how your brain is performing today."
-            android:textColor="#64748B"
-            android:layout_marginBottom="24dp" />
-
-        <!-- AI Suggestions Card -->
-        <androidx.cardview.widget.CardView
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            app:cardCornerRadius="24dp"
-            app:cardElevation="0dp"
-            android:backgroundTint="#2563EB">
+            android:orientation="vertical"
+            android:padding="20dp">
 
-            <LinearLayout
+            <!-- Stats Holder -->
+            <androidx.cardview.widget.CardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:padding="20dp">
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="AI BRAIN INSIGHTS"
-                    android:textColor="#FFFFFF"
-                    android:textSize="12sp"
-                    android:textStyle="bold"
-                    android:layout_marginBottom="12dp" />
-
-                <TextView
-                    android:id="@+id/ai_suggestion_content"
+                app:cardCornerRadius="16dp"
+                android:layout_marginBottom="16dp">
+                <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="Take a 5-minute break now to stay focused later."
-                    android:textColor="#FFFFFF"
-                    android:textStyle="bold" />
-            </LinearLayout>
-        </androidx.cardview.widget.CardView>
+                    android:padding="16dp"
+                    android:orientation="horizontal">
+                    <TextView
+                        android:id="@+id/tv_pending_count"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="0"
+                        android:gravity="center"
+                        android:textStyle="bold" />
+                    <TextView
+                        android:id="@+id/tv_focus_level"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="100%"
+                        android:gravity="center"
+                        android:textStyle="bold" />
+                </LinearLayout>
+            </androidx.cardview.widget.CardView>
 
-        <!-- Stats Grid and Tasks would be added here similarly -->
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Upcoming Task"
-            android:textSize="18sp"
-            android:textStyle="bold"
-            android:textColor="#0F172A"
-            android:layout_marginTop="24dp"
-            android:layout_marginBottom="12dp" />
-
-        <com.google.android.material.card.MaterialCardView
-            android:id="@+id/upcoming_task_card"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            app:cardCornerRadius="16dp"
-            app:cardElevation="2dp"
-            android:visibility="gone">
-
-            <LinearLayout
+            <!-- Next Task Holder -->
+            <androidx.cardview.widget.CardView
+                android:id="@+id/cv_next_task"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:padding="16dp">
-
-                <TextView
-                    android:id="@+id/tv_upcoming_task_title"
-                    android:layout_width="wrap_content"
+                app:cardCornerRadius="16dp">
+                <LinearLayout
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="No tasks for today"
-                    android:textStyle="bold"
-                    android:textColor="#0F172A" />
+                    android:orientation="vertical"
+                    android:padding="16dp">
+                    <TextView android:id="@+id/tv_upcoming_status" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="UPCOMING" android:textColor="#2563EB" android:textStyle="bold" />
+                    <TextView android:id="@+id/tv_upcoming_title" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="Start your engine" android:textSize="18sp" android:textStyle="bold" android:layout_marginTop="8dp" />
+                    <TextView android:id="@+id/tv_upcoming_time" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="No tasks scheduled" />
+                </LinearLayout>
+            </androidx.cardview.widget.CardView>
 
+            <!-- Missed Alert Holder -->
+            <androidx.cardview.widget.CardView
+                android:id="@+id/cv_missed_tasks"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:visibility="gone">
                 <TextView
-                    android:id="@+id/tv_upcoming_task_time"
-                    android:layout_width="wrap_content"
+                    android:id="@+id/tv_missed_count"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="All caught up!"
-                    android:textColor="#64748B"
-                    android:textSize="12sp" />
-            </LinearLayout>
-        </com.google.android.material.card.MaterialCardView>
+                    android:padding="16dp"
+                    android:textColor="#FF0000"
+                    android:textStyle="bold" />
+            </androidx.cardview.widget.CardView>
 
-        <Button
-            android:id="@+id/btn_logout"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="32dp"
-            android:text="Logout"
-            android:textColor="#FFFFFF"
-            android:backgroundTint="#EF4444"
-            android:textAllCaps="false" />
-    </LinearLayout>
-</ScrollView>
+        </LinearLayout>
+    </ScrollView>
+</LinearLayout>
