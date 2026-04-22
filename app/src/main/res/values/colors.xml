@@ -2,4 +2,9 @@
 <resources>
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
+    <color name="brain_blue">#2563EB</color>
+    <color name="brain_blue_light">#DBEAFE</color>
+    <color name="brain_dark">#0F172A</color>
+    <color name="brain_gray">#64748B</color>
+    <color name="brain_bg">#F8FAFC</color>
 </resources>

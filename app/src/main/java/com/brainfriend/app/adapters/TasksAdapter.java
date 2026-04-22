@@ -8,17 +8,15 @@ import android.view.ViewGroup;
 import android.widget.CheckBox;
 import android.widget.TextView;
 import androidx.annotation.NonNull;
+import androidx.cardview.widget.CardView;
 import androidx.recyclerview.widget.RecyclerView;
 import com.brainfriend.app.R;
 import com.brainfriend.app.models.Task;
-import java.text.SimpleDateFormat;
 import java.util.List;
-import java.util.Locale;
 
 public class TasksAdapter extends RecyclerView.Adapter<TasksAdapter.TaskViewHolder> {
     private List<Task> tasks;
     private OnTaskClickListener listener;
-    private SimpleDateFormat dateFormat = new SimpleDateFormat("MMM dd, hh:mm a", Locale.getDefault());
 
     public interface OnTaskClickListener {
         void onTaskChecked(Task task, boolean isChecked);
@@ -32,14 +30,47 @@ public class TasksAdapter extends RecyclerView.Adapter<TasksAdapter.TaskViewHold
     @NonNull
     @Override
     public TaskViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_task, parent, false);
-        return new TaskViewHolder(view);
+        View v = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_task, parent, false);
+        return new TaskViewHolder(v);
     }
 
     @Override
     public void onBindViewHolder(@NonNull TaskViewHolder holder, int position) {
         Task task = tasks.get(position);
-        holder.bind(task, listener, dateFormat);
+        holder.tvTitle.setText(task.getTitle());
+        holder.tvCat.setText(task.getCategory() != null ? task.getCategory() : "General");
+
+        // Importance Styling
+        switch (task.getImportance()) {
+            case 3: // High
+                holder.tvImp.setText("HIGH");
+                holder.tvImp.setTextColor(Color.parseColor("#EF4444"));
+                holder.cvImp.setCardBackgroundColor(Color.parseColor("#FEE2E2"));
+                break;
+            case 2: // Medium
+                holder.tvImp.setText("MED");
+                holder.tvImp.setTextColor(Color.parseColor("#F59E0B"));
+                holder.cvImp.setCardBackgroundColor(Color.parseColor("#FEF3C7"));
+                break;
+            default: // Low
+                holder.tvImp.setText("LOW");
+                holder.tvImp.setTextColor(Color.parseColor("#10B981"));
+                holder.cvImp.setCardBackgroundColor(Color.parseColor("#D1FAE5"));
+                break;
+        }
+
+        holder.cb.setOnCheckedChangeListener(null);
+        holder.cb.setChecked(task.isCompleted());
+
+        if (task.isCompleted()) {
+            holder.tvTitle.setPaintFlags(holder.tvTitle.getPaintFlags() | Paint.STRIKE_THRU_TEXT_FLAG);
+            holder.tvTitle.setAlpha(0.5f);
+        } else {
+            holder.tvTitle.setPaintFlags(holder.tvTitle.getPaintFlags() & (~Paint.STRIKE_THRU_TEXT_FLAG));
+            holder.tvTitle.setAlpha(1.0f);
+        }
+
+        holder.cb.setOnCheckedChangeListener((bv, isChecked) -> listener.onTaskChecked(task, isChecked));
     }
 
     @Override
@@ -51,41 +82,17 @@ public class TasksAdapter extends RecyclerView.Adapter<TasksAdapter.TaskViewHold
     }
 
     static class TaskViewHolder extends RecyclerView.ViewHolder {
-        TextView tvTitle, tvDetails, tvTime;
-        View importanceIndicator;
-        CheckBox cbStatus;
+        TextView tvTitle, tvCat, tvImp;
+        CardView cvImp;
+        CheckBox cb;
 
         public TaskViewHolder(@NonNull View itemView) {
             super(itemView);
             tvTitle = itemView.findViewById(R.id.tv_task_title);
-            tvDetails = itemView.findViewById(R.id.tv_task_details);
-            tvTime = itemView.findViewById(R.id.tv_task_time);
-            importanceIndicator = itemView.findViewById(R.id.importance_indicator);
-            cbStatus = itemView.findViewById(R.id.cb_task_status);
-        }
-
-        public void bind(Task task, OnTaskClickListener listener, SimpleDateFormat dateFormat) {
-            tvTitle.setText(task.getTitle());
-            tvDetails.setText(task.getDetails());
-            tvDetails.setVisibility(task.getDetails() != null && !task.getDetails().isEmpty() ? View.VISIBLE : View.GONE);
-            tvTime.setText(task.getDueDate() != null ? dateFormat.format(task.getDueDate()) : "No date set");
-
-            int indicatorColor = task.getImportance() == 3 ? Color.parseColor("#EF4444") :
-                    (task.getImportance() == 2 ? Color.parseColor("#F59E0B") : Color.parseColor("#10B981"));
-            importanceIndicator.setBackgroundColor(indicatorColor);
-
-            cbStatus.setOnCheckedChangeListener(null);
-            cbStatus.setChecked(task.isCompleted());
-
-            if (task.isCompleted()) {
-                tvTitle.setPaintFlags(tvTitle.getPaintFlags() | Paint.STRIKE_THRU_TEXT_FLAG);
-                tvTitle.setTextColor(Color.GRAY);
-            } else {
-                tvTitle.setPaintFlags(tvTitle.getPaintFlags() & (~Paint.STRIKE_THRU_TEXT_FLAG));
-                tvTitle.setTextColor(Color.parseColor("#0F172A"));
-            }
-
-            cbStatus.setOnCheckedChangeListener((buttonView, isChecked) -> listener.onTaskChecked(task, isChecked));
+            tvCat = itemView.findViewById(R.id.tv_task_category);
+            tvImp = itemView.findViewById(R.id.tv_importance_label);
+            cvImp = itemView.findViewById(R.id.cv_importance_badge);
+            cb = itemView.findViewById(R.id.cb_task_status);
         }
     }
 }
