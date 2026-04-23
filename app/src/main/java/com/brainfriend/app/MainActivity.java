@@ -33,8 +33,7 @@ public class MainActivity extends AppCompatActivity {
                 selectedFragment = new RoutineFragment();
             } else if (id == R.id.nav_brain) {
                 selectedFragment = new ExercisesFragment();
-            } else if (id == R.id.nav_reminders) {
-                selectedFragment = new AddReminderFragment();
+
             } else if (id == R.id.nav_settings) {
                 selectedFragment = new SettingsFragment();
             }
