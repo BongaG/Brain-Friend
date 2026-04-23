@@ -6,7 +6,6 @@
     android:orientation="vertical"
     android:background="#F8FAFC">
 
-    <!-- Simple Blue Header -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -32,7 +31,7 @@
             android:orientation="vertical"
             android:padding="20dp">
 
-            <!-- Stats Holder -->
+
             <androidx.cardview.widget.CardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -62,7 +61,7 @@
                 </LinearLayout>
             </androidx.cardview.widget.CardView>
 
-            <!-- Next Task Holder -->
+
             <androidx.cardview.widget.CardView
                 android:id="@+id/cv_next_task"
                 android:layout_width="match_parent"
@@ -79,7 +78,7 @@
                 </LinearLayout>
             </androidx.cardview.widget.CardView>
 
-            <!-- Missed Alert Holder -->
+
             <androidx.cardview.widget.CardView
                 android:id="@+id/cv_missed_tasks"
                 android:layout_width="match_parent"

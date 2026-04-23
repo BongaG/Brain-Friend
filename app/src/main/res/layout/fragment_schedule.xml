@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- fragment_schedule.xml  →  res/layout/ -->
+<androidx.coordinatorlayout.widget.CoordinatorLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#F8F6FF">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:padding="16dp">
+
+        <!-- Day header -->
+        <TextView
+            android:id="@+id/tv_day_name"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textSize="28sp"
+            android:textStyle="bold"
+            android:textColor="#3B2F6E"
+            android:layout_marginBottom="2dp"/>
+
+        <TextView
+            android:id="@+id/tv_date"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textSize="14sp"
+            android:textColor="#7B6FB5"
+            android:layout_marginBottom="20dp"/>
+
+        <!-- Empty state -->
+        <TextView
+            android:id="@+id/tv_schedule_empty"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="No events yet!\nTap ＋ to add something to your day 🗓️"
+            android:textSize="15sp"
+            android:textColor="#A09AC0"
+            android:gravity="center"
+            android:layout_marginTop="60dp"
+            android:visibility="gone"/>
+
+        <!-- Schedule list -->
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/rv_schedule"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:clipToPadding="false"
+            android:paddingBottom="80dp"/>
+
+    </LinearLayout>
+
+    <!-- FAB -->
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+        android:id="@+id/fab_add_schedule"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom|end"
+        android:layout_margin="16dp"
+        android:contentDescription="Add schedule item"
+        app:srcCompat="@android:drawable/ic_input_add"
+        app:backgroundTint="#5B4FCF"
+        app:tint="@android:color/white"/>
+
+</androidx.coordinatorlayout.widget.CoordinatorLayout>
