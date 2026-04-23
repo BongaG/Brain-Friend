@@ -4,5 +4,6 @@
     <item android:id="@+id/nav_tasks" android:icon="@android:drawable/ic_menu_agenda" android:title="Tasks" />
     <item android:id="@+id/nav_routine" android:icon="@android:drawable/ic_menu_view" android:title="Routine" />
     <item android:id="@+id/nav_brain" android:icon="@android:drawable/ic_menu_help" android:title="Brain" />
+    <item android:id="@+id/nav_reminders" android:icon="@android:drawable/ic_menu_recent_history" android:title="Reminders" />
     <item android:id="@+id/nav_settings" android:icon="@android:drawable/ic_menu_preferences" android:title="Settings" />
 </menu>
