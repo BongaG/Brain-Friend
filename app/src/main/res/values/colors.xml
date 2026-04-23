@@ -7,4 +7,6 @@
     <color name="brain_dark">#0F172A</color>
     <color name="brain_gray">#64748B</color>
     <color name="brain_bg">#F8FAFC</color>
+    <color name="nav_active">#2563EB</color>
+    <color name="nav_inactive">#94A3B8</color>
 </resources>

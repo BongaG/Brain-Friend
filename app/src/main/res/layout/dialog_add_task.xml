@@ -1,40 +1,225 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:layout_width="match_parent" android:layout_height="wrap_content"
-    android:orientation="vertical" android:padding="24dp" android:background="#FFFFFF">
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="#FFFFFF">
 
-    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
-        android:text="New Achievement" android:textSize="20sp" android:textStyle="bold" android:textColor="@color/brain_dark" android:layout_marginBottom="20dp" />
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="24dp">
 
-    <com.google.android.material.textfield.TextInputLayout android:layout_width="match_parent" android:layout_height="wrap_content"
-        android:hint="Achievement Title" style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox" android:layout_marginBottom="12dp">
-        <com.google.android.material.textfield.TextInputEditText android:id="@+id/et_task_title" android:layout_width="match_parent" android:layout_height="wrap_content" />
-    </com.google.android.material.textfield.TextInputLayout>
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Add New Task"
+            android:textSize="20sp"
+            android:textStyle="bold"
+            android:textColor="#0F172A"
+            android:layout_marginBottom="20dp" />
 
-    <com.google.android.material.textfield.TextInputLayout android:layout_width="match_parent" android:layout_height="wrap_content"
-        android:hint="Notes / Specific Instructions" style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox" android:layout_marginBottom="16dp">
-        <com.google.android.material.textfield.TextInputEditText android:id="@+id/et_task_details" android:layout_width="match_parent" android:layout_height="wrap_content" />
-    </com.google.android.material.textfield.TextInputLayout>
+        <!-- Title -->
+        <com.google.android.material.textfield.TextInputLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Task Title"
+            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+            android:layout_marginBottom="14dp">
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/et_task_title"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:inputType="text" />
+        </com.google.android.material.textfield.TextInputLayout>
 
-    <TextView android:text="Priority Level" android:textSize="12sp" android:textStyle="bold" android:layout_marginBottom="8dp" />
-    <com.google.android.material.chip.ChipGroup android:id="@+id/cg_importance" android:layout_width="match_parent" android:layout_height="wrap_content" app:singleSelection="true" android:layout_marginBottom="16dp">
-        <com.google.android.material.chip.Chip android:id="@+id/chip_low" android:text="Low" style="@style/Widget.MaterialComponents.Chip.Choice" />
-        <com.google.android.material.chip.Chip android:id="@+id/chip_medium" android:text="Med" style="@style/Widget.MaterialComponents.Chip.Choice" />
-        <com.google.android.material.chip.Chip android:id="@+id/chip_high" android:text="High" style="@style/Widget.MaterialComponents.Chip.Choice" />
-    </com.google.android.material.chip.ChipGroup>
+        <!-- Details -->
+        <com.google.android.material.textfield.TextInputLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Details (optional)"
+            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+            android:layout_marginBottom="14dp">
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/et_task_details"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:inputType="textMultiLine"
+                android:minLines="2" />
+        </com.google.android.material.textfield.TextInputLayout>
 
-    <TextView android:text="Category" android:textSize="12sp" android:textStyle="bold" android:layout_marginBottom="8dp" />
-    <com.google.android.material.chip.ChipGroup android:id="@+id/cg_category" android:layout_width="match_parent" android:layout_height="wrap_content" app:singleSelection="true" android:layout_marginBottom="16dp">
-        <com.google.android.material.chip.Chip android:id="@+id/chip_school" android:text="School" style="@style/Widget.MaterialComponents.Chip.Choice" />
-        <com.google.android.material.chip.Chip android:id="@+id/chip_personal" android:text="Personal" style="@style/Widget.MaterialComponents.Chip.Choice" />
-        <com.google.android.material.chip.Chip android:id="@+id/chip_work" android:text="Work" style="@style/Widget.MaterialComponents.Chip.Choice" />
-    </com.google.android.material.chip.ChipGroup>
+        <!-- Priority -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Priority"
+            android:textSize="14sp"
+            android:textStyle="bold"
+            android:textColor="#0F172A"
+            android:layout_marginBottom="8dp" />
 
-    <com.google.android.material.switchmaterial.SwitchMaterial android:id="@+id/switch_recurring"
-        android:layout_width="match_parent" android:layout_height="wrap_content"
-        android:text="Recurring Goal (Repeat Daily)" android:layout_marginBottom="24dp" />
+        <com.google.android.material.chip.ChipGroup
+            android:id="@+id/cg_importance"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            app:singleSelection="true"
+            android:layout_marginBottom="16dp">
 
-    <Button android:id="@+id/btn_add_task_confirm" android:layout_width="match_parent" android:layout_height="wrap_content"
-        android:text="Finalize Plan" android:backgroundTint="@color/brain_blue" app:cornerRadius="12dp" />
-</LinearLayout>
+            <com.google.android.material.chip.Chip
+                android:id="@+id/chip_high"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="🔴 High"
+                style="@style/Widget.MaterialComponents.Chip.Choice" />
+
+            <com.google.android.material.chip.Chip
+                android:id="@+id/chip_medium"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="🟡 Medium"
+                style="@style/Widget.MaterialComponents.Chip.Choice" />
+
+            <com.google.android.material.chip.Chip
+                android:id="@+id/chip_low"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="🟢 Low"
+                style="@style/Widget.MaterialComponents.Chip.Choice" />
+        </com.google.android.material.chip.ChipGroup>
+
+        <!-- Category -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Category"
+            android:textSize="14sp"
+            android:textStyle="bold"
+            android:textColor="#0F172A"
+            android:layout_marginBottom="8dp" />
+
+        <com.google.android.material.chip.ChipGroup
+            android:id="@+id/cg_category"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            app:singleSelection="true"
+            android:layout_marginBottom="16dp">
+
+            <com.google.android.material.chip.Chip
+                android:id="@+id/chip_personal"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Personal"
+                style="@style/Widget.MaterialComponents.Chip.Choice" />
+
+            <com.google.android.material.chip.Chip
+                android:id="@+id/chip_school"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="School"
+                style="@style/Widget.MaterialComponents.Chip.Choice" />
+
+            <com.google.android.material.chip.Chip
+                android:id="@+id/chip_work"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Work"
+                style="@style/Widget.MaterialComponents.Chip.Choice" />
+        </com.google.android.material.chip.ChipGroup>
+
+        <!-- Date picker -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Due Date"
+            android:textSize="14sp"
+            android:textStyle="bold"
+            android:textColor="#0F172A"
+            android:layout_marginBottom="8dp" />
+
+        <Button
+            android:id="@+id/btn_pick_date"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Select Date"
+            android:backgroundTint="#F1F5F9"
+            android:textColor="#0F172A"
+            android:layout_marginBottom="14dp" />
+
+        <!-- Time picker -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Due Time"
+            android:textSize="14sp"
+            android:textStyle="bold"
+            android:textColor="#0F172A"
+            android:layout_marginBottom="8dp" />
+
+        <Button
+            android:id="@+id/btn_pick_time"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Select Time"
+            android:backgroundTint="#F1F5F9"
+            android:textColor="#0F172A"
+            android:layout_marginBottom="14dp" />
+
+        <!-- Alert toggle -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:layout_marginBottom="14dp">
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="🔔 Alert 10 min before"
+                android:textSize="14sp"
+                android:textColor="#0F172A" />
+
+            <com.google.android.material.switchmaterial.SwitchMaterial
+                android:id="@+id/switch_alert"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:checked="true" />
+        </LinearLayout>
+
+        <!-- Recurring toggle -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:layout_marginBottom="24dp">
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="🔁 Recurring task"
+                android:textSize="14sp"
+                android:textColor="#0F172A" />
+
+            <com.google.android.material.switchmaterial.SwitchMaterial
+                android:id="@+id/switch_recurring"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content" />
+        </LinearLayout>
+
+        <!-- Confirm button -->
+        <Button
+            android:id="@+id/btn_add_task_confirm"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Add Task"
+            android:backgroundTint="#2563EB"
+            android:textColor="#FFFFFF"
+            android:textSize="16sp"
+            android:padding="14dp" />
+
+    </LinearLayout>
+</ScrollView>
