@@ -8,12 +8,11 @@ import android.view.ViewGroup;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
+import androidx.recyclerview.widget.ItemTouchHelper;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.brainfriend.app.R;
-
-
 
 public class RemindersListFragment extends Fragment {
 
@@ -34,19 +33,44 @@ public class RemindersListFragment extends Fragment {
         RecyclerView rv = view.findViewById(R.id.rv_reminders);
         rv.setLayoutManager(new LinearLayoutManager(requireContext()));
 
+        // Adapter with tap-to-mark-done (only for active reminders)
         adapter = new RemindersAdapter(entity -> {
-            // On swipe-to-dismiss or "Done" tap: cancel alarm + mark done in DB
-            new Thread(() -> {
-                ReminderScheduler.cancel(requireContext(), entity.id);
-                AppDatabase.getInstance(requireContext()).reminderDao().markDone(entity.id);
-            }).start();
+            // Only mark as done if it's still active
+            if (entity.isActive) {
+                new Thread(() -> {
+                    ReminderScheduler.cancel(requireContext(), entity.id);
+                    AppDatabase.getInstance(requireContext()).reminderDao().markDone(entity.id);
+                }).start();
+            }
         });
         rv.setAdapter(adapter);
 
-        // Observe LiveData — updates list automatically
+        // Swipe-to-delete (works on any reminder)
+        new ItemTouchHelper(new ItemTouchHelper.SimpleCallback(0, ItemTouchHelper.LEFT | ItemTouchHelper.RIGHT) {
+            @Override
+            public boolean onMove(@NonNull RecyclerView recyclerView,
+                                  @NonNull RecyclerView.ViewHolder viewHolder,
+                                  @NonNull RecyclerView.ViewHolder target) {
+                return false;
+            }
+
+            @Override
+            public void onSwiped(@NonNull RecyclerView.ViewHolder viewHolder, int direction) {
+                int position = viewHolder.getAdapterPosition();
+                ReminderEntity entity = adapter.getCurrentList().get(position);
+                if (entity != null) {
+                    new Thread(() -> {
+                        ReminderScheduler.cancel(requireContext(), entity.id);
+                        AppDatabase.getInstance(requireContext()).reminderDao().deleteById(entity.id);
+                    }).start();
+                }
+            }
+        }).attachToRecyclerView(rv);
+
+        // Observe ALL reminders (both active and done)
         AppDatabase.getInstance(requireContext())
                 .reminderDao()
-                .getActiveReminders()
+                .getAllReminders()
                 .observe(getViewLifecycleOwner(), reminders -> adapter.submitList(reminders));
     }
 }
