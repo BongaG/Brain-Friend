@@ -1,5 +1,7 @@
 package com.brainfriend.app.reminders;
 
+import android.graphics.Color;
+import android.graphics.Paint;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -15,8 +17,6 @@ import com.brainfriend.app.R;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
-
-
 
 public class RemindersAdapter extends ListAdapter<ReminderEntity, RemindersAdapter.ViewHolder> {
 
@@ -46,7 +46,24 @@ public class RemindersAdapter extends ListAdapter<ReminderEntity, RemindersAdapt
         ReminderEntity entity = getItem(position);
         holder.tvTitle.setText(entity.title);
         holder.tvTime.setText("⏰ " + SDF.format(new Date(entity.triggerTimeMs)));
-        holder.itemView.setOnClickListener(v -> listener.onDone(entity));
+
+        // Strikethrough + gray color for done (inactive) reminders
+        if (!entity.isActive) {
+            holder.tvTitle.setPaintFlags(holder.tvTitle.getPaintFlags() | Paint.STRIKE_THRU_TEXT_FLAG);
+            holder.tvTitle.setTextColor(Color.GRAY);
+            holder.tvTime.setTextColor(Color.LTGRAY);
+        } else {
+            holder.tvTitle.setPaintFlags(holder.tvTitle.getPaintFlags() & (~Paint.STRIKE_THRU_TEXT_FLAG));
+            holder.tvTitle.setTextColor(Color.parseColor("#2D2152"));
+            holder.tvTime.setTextColor(Color.parseColor("#7B6FB5"));
+        }
+
+        // Tap listener – only trigger if reminder is still active
+        holder.itemView.setOnClickListener(v -> {
+            if (entity.isActive) {
+                listener.onDone(entity);
+            }
+        });
     }
 
     static class ViewHolder extends RecyclerView.ViewHolder {
@@ -66,7 +83,7 @@ public class RemindersAdapter extends ListAdapter<ReminderEntity, RemindersAdapt
                 }
                 @Override
                 public boolean areContentsTheSame(@NonNull ReminderEntity a, @NonNull ReminderEntity b) {
-                    return a.title.equals(b.title) && a.triggerTimeMs == b.triggerTimeMs;
+                    return a.title.equals(b.title) && a.triggerTimeMs == b.triggerTimeMs && a.isActive == b.isActive;
                 }
             };
 }
