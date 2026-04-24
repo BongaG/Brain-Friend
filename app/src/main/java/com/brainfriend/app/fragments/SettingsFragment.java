@@ -2,6 +2,7 @@ package com.brainfriend.app.fragments;
 
 import android.app.AlertDialog;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -14,13 +15,13 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatDelegate;
 import androidx.fragment.app.Fragment;
+import com.brainfriend.app.R;
 import com.google.android.material.switchmaterial.SwitchMaterial;
 import com.google.firebase.auth.AuthCredential;
 import com.google.firebase.auth.EmailAuthProvider;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.FirebaseFirestore;
-import com.brainfriend.app.R;
 
 public class SettingsFragment extends Fragment {
 
@@ -28,6 +29,7 @@ public class SettingsFragment extends Fragment {
     private FirebaseFirestore db;
     private String userId;
     private String userEmail;
+    private SharedPreferences prefs;
 
     @Nullable
     @Override
@@ -42,6 +44,7 @@ public class SettingsFragment extends Fragment {
 
         mAuth = FirebaseAuth.getInstance();
         db = FirebaseFirestore.getInstance();
+        prefs = requireActivity().getSharedPreferences("settings", 0);
 
         if (mAuth.getCurrentUser() == null) return view;
 
@@ -51,48 +54,50 @@ public class SettingsFragment extends Fragment {
         TextView tvEmail = view.findViewById(R.id.tv_settings_email);
         if (tvEmail != null) tvEmail.setText(userEmail);
 
-        // Load user data from Firestore
         loadUserData(view);
+        setupDarkMode(view);
 
-        // Dark mode toggle
-        SwitchMaterial switchDark = view.findViewById(R.id.switch_dark_mode);
-        if (switchDark != null) {
-            int currentMode = AppCompatDelegate.getDefaultNightMode();
-            switchDark.setChecked(currentMode == AppCompatDelegate.MODE_NIGHT_YES);
-            switchDark.setOnCheckedChangeListener((btn, checked) -> {
-                AppCompatDelegate.setDefaultNightMode(checked
-                        ? AppCompatDelegate.MODE_NIGHT_YES
-                        : AppCompatDelegate.MODE_NIGHT_NO);
-            });
-        }
-
-        // Edit profile button
-        view.findViewById(R.id.btn_edit_profile).setOnClickListener(v -> showEditNameDialog());
-
-        // Edit phone
-        view.findViewById(R.id.btn_edit_phone).setOnClickListener(v -> showEditPhoneDialog());
-
-        // Change password
-        view.findViewById(R.id.btn_change_password).setOnClickListener(v -> showChangePasswordDialog());
-
-        // Log out
-        view.findViewById(R.id.btn_logout_full).setOnClickListener(v -> showLogoutDialog());
-
-        // Delete account
-        view.findViewById(R.id.btn_delete_account).setOnClickListener(v -> showDeleteAccountDialog());
-
-        // Old logout icon — keep working
-       // View oldLogout = view.findViewById(R.id.btn_logout_settings);
-       // if (oldLogout != null) oldLogout.setOnClickListener(v -> showLogoutDialog());
+        view.findViewById(R.id.btn_edit_profile)
+                .setOnClickListener(v -> showEditNameDialog());
+        view.findViewById(R.id.btn_edit_phone)
+                .setOnClickListener(v -> showEditPhoneDialog());
+        view.findViewById(R.id.btn_change_password)
+                .setOnClickListener(v -> showChangePasswordDialog());
+        view.findViewById(R.id.btn_logout_full)
+                .setOnClickListener(v -> showLogoutDialog());
+        view.findViewById(R.id.btn_delete_account)
+                .setOnClickListener(v -> showDeleteAccountDialog());
 
         return view;
+    }
+
+    // ─── Dark Mode ───
+    private void setupDarkMode(View view) {
+        SwitchMaterial switchDark = view.findViewById(R.id.switch_dark_mode);
+        if (switchDark == null) return;
+
+        // Read saved preference — NOT from AppCompatDelegate
+        boolean isDark = prefs.getBoolean("dark_mode", false);
+        switchDark.setChecked(isDark);
+
+        switchDark.setOnCheckedChangeListener((btn, checked) -> {
+            // Save first
+            prefs.edit().putBoolean("dark_mode", checked).apply();
+
+            // Apply mode
+            AppCompatDelegate.setDefaultNightMode(checked
+                    ? AppCompatDelegate.MODE_NIGHT_YES
+                    : AppCompatDelegate.MODE_NIGHT_NO);
+
+            // Recreate to apply
+            requireActivity().recreate();
+        });
     }
 
     private void loadUserData(View view) {
         db.collection("users").document(userId).get()
                 .addOnSuccessListener(doc -> {
                     if (!isAdded() || doc == null) return;
-
                     String name = doc.getString("name");
                     String phone = doc.getString("phone");
 
@@ -103,14 +108,13 @@ public class SettingsFragment extends Fragment {
                     if (tvName != null && name != null) tvName.setText(name);
                     if (tvPhone != null && phone != null) tvPhone.setText(phone);
                     if (tvAvatar != null && name != null && !name.isEmpty()) {
-                        tvAvatar.setText(String.valueOf(name.charAt(0)).toUpperCase());
+                        tvAvatar.setText(
+                                String.valueOf(name.charAt(0)).toUpperCase());
                     }
                 });
     }
 
-    // --- Edit Name ---
     private void showEditNameDialog() {
-        View dv = LayoutInflater.from(getContext()).inflate(android.R.layout.select_dialog_item, null);
         EditText et = new EditText(getContext());
         et.setHint("Enter new name");
         et.setPadding(48, 32, 48, 32);
@@ -137,7 +141,6 @@ public class SettingsFragment extends Fragment {
                 .show();
     }
 
-    // --- Edit Phone ---
     private void showEditPhoneDialog() {
         EditText et = new EditText(getContext());
         et.setHint("Enter new phone number");
@@ -166,7 +169,6 @@ public class SettingsFragment extends Fragment {
                 .show();
     }
 
-    // --- Change Password ---
     private void showChangePasswordDialog() {
         LinearLayout layout = new LinearLayout(getContext());
         layout.setOrientation(LinearLayout.VERTICAL);
@@ -200,7 +202,8 @@ public class SettingsFragment extends Fragment {
                     String newPass = etNew.getText().toString().trim();
                     String confirm = etConfirm.getText().toString().trim();
 
-                    if (current.isEmpty() || newPass.isEmpty() || confirm.isEmpty()) {
+                    if (current.isEmpty() || newPass.isEmpty()
+                            || confirm.isEmpty()) {
                         Toast.makeText(getContext(), "All fields required",
                                 Toast.LENGTH_SHORT).show();
                         return;
@@ -211,34 +214,38 @@ public class SettingsFragment extends Fragment {
                         return;
                     }
                     if (newPass.length() < 6) {
-                        Toast.makeText(getContext(), "Password must be 6+ characters",
+                        Toast.makeText(getContext(),
+                                "Password must be 6+ characters",
                                 Toast.LENGTH_SHORT).show();
                         return;
                     }
 
-                    // Re-authenticate then change password
                     FirebaseUser user = mAuth.getCurrentUser();
                     if (user == null || userEmail == null) return;
 
                     AuthCredential credential = EmailAuthProvider
                             .getCredential(userEmail, current);
 
-                    user.reauthenticate(credential).addOnSuccessListener(a ->
-                            user.updatePassword(newPass).addOnSuccessListener(b -> {
-                                Toast.makeText(getContext(), "Password changed successfully!",
-                                        Toast.LENGTH_SHORT).show();
-                            }).addOnFailureListener(e ->
-                                    Toast.makeText(getContext(), "Failed: " + e.getMessage(),
-                                            Toast.LENGTH_SHORT).show())
-                    ).addOnFailureListener(e ->
-                            Toast.makeText(getContext(), "Current password is incorrect",
-                                    Toast.LENGTH_SHORT).show());
+                    user.reauthenticate(credential)
+                            .addOnSuccessListener(a ->
+                                    user.updatePassword(newPass)
+                                            .addOnSuccessListener(b ->
+                                                    Toast.makeText(getContext(),
+                                                            "Password changed!",
+                                                            Toast.LENGTH_SHORT).show())
+                                            .addOnFailureListener(e ->
+                                                    Toast.makeText(getContext(),
+                                                            "Failed: " + e.getMessage(),
+                                                            Toast.LENGTH_SHORT).show()))
+                            .addOnFailureListener(e ->
+                                    Toast.makeText(getContext(),
+                                            "Current password incorrect",
+                                            Toast.LENGTH_SHORT).show());
                 })
                 .setNegativeButton("Cancel", null)
                 .show();
     }
 
-    // --- Log Out ---
     private void showLogoutDialog() {
         new AlertDialog.Builder(requireContext())
                 .setTitle("Log Out")
@@ -253,14 +260,14 @@ public class SettingsFragment extends Fragment {
         try {
             Class<?> loginClass = Class.forName("com.brainfriend.app.LoginActivity");
             Intent intent = new Intent(requireContext(), loginClass);
-            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK
+                    | Intent.FLAG_ACTIVITY_CLEAR_TASK);
             startActivity(intent);
         } catch (ClassNotFoundException e) {
             Toast.makeText(getContext(), "Logged out", Toast.LENGTH_SHORT).show();
         }
     }
 
-    // --- Delete Account ---
     private void showDeleteAccountDialog() {
         EditText etPassword = new EditText(getContext());
         etPassword.setHint("Enter your password to confirm");
@@ -270,7 +277,8 @@ public class SettingsFragment extends Fragment {
 
         new AlertDialog.Builder(requireContext())
                 .setTitle("⚠️ Delete Account")
-                .setMessage("This will permanently delete your account and all your data. This cannot be undone.")
+                .setMessage("This will permanently delete your account " +
+                        "and all your data. This cannot be undone.")
                 .setView(etPassword)
                 .setPositiveButton("Delete Forever", (d, w) -> {
                     String password = etPassword.getText().toString().trim();
@@ -287,7 +295,6 @@ public class SettingsFragment extends Fragment {
                             .getCredential(userEmail, password);
 
                     user.reauthenticate(credential).addOnSuccessListener(a -> {
-                        // Delete Firestore data first
                         db.collection("users").document(userId).delete();
                         db.collection("tasks")
                                 .whereEqualTo("userId", userId)
@@ -297,7 +304,6 @@ public class SettingsFragment extends Fragment {
                                         doc.getReference().delete();
                                     }
                                 });
-                        // Delete Firebase Auth account
                         user.delete().addOnSuccessListener(b -> {
                             Toast.makeText(getContext(), "Account deleted",
                                     Toast.LENGTH_SHORT).show();

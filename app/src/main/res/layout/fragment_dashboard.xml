@@ -130,12 +130,71 @@
                     </LinearLayout>
 
                     <TextView
+                        android:id="@+id/tv_ai_insight"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Analysing your routine.. Check back in a bit!"
+                        android:text="🧠 Analysing your tasks..."
                         android:textSize="14sp"
                         android:textColor="#BFDBFE"
                         android:layout_marginTop="6dp" />
+                </LinearLayout>
+            </androidx.cardview.widget.CardView>
+
+            <!-- Focus Tip Card (shows when focus < 50%) -->
+            <androidx.cardview.widget.CardView
+                android:id="@+id/cv_focus_tip"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                app:cardCornerRadius="16dp"
+                app:cardElevation="0dp"
+                app:cardBackgroundColor="#FFFBEB"
+                android:layout_marginBottom="16dp"
+                android:visibility="gone">
+
+                <TextView
+                    android:id="@+id/tv_focus_tip"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:padding="16dp"
+                    android:text=""
+                    android:textSize="14sp"
+                    android:textColor="#92400E" />
+            </androidx.cardview.widget.CardView>
+
+            <!-- Weekly Brain Report (Mondays only) -->
+            <androidx.cardview.widget.CardView
+                android:id="@+id/cv_weekly_report"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                app:cardCornerRadius="16dp"
+                app:cardElevation="0dp"
+                app:cardBackgroundColor="#F0FDF4"
+                android:layout_marginBottom="16dp"
+                android:visibility="gone">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="16dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="📊 WEEKLY BRAIN REPORT"
+                        android:textSize="11sp"
+                        android:textStyle="bold"
+                        android:textColor="#166534"
+                        android:letterSpacing="0.1"
+                        android:layout_marginBottom="6dp" />
+
+                    <TextView
+                        android:id="@+id/tv_weekly_report"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text=""
+                        android:textSize="14sp"
+                        android:textColor="#166534" />
                 </LinearLayout>
             </androidx.cardview.widget.CardView>
 

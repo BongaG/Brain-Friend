@@ -23,7 +23,6 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
-import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.ItemTouchHelper;
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -86,7 +85,6 @@ public class TasksFragment extends Fragment implements TasksAdapter.OnTaskClickL
             setupSwipeGestures();
         }
 
-        // Filter chips
         ChipGroup cgFilter = view.findViewById(R.id.cg_filter);
         if (cgFilter != null) {
             cgFilter.setOnCheckedStateChangeListener((group, checkedIds) -> {
@@ -124,12 +122,11 @@ public class TasksFragment extends Fragment implements TasksAdapter.OnTaskClickL
                 Task task = adapter.getTaskAt(position);
 
                 if (direction == ItemTouchHelper.RIGHT) {
-                    // Swipe right = complete
                     db.collection("tasks").document(task.getId())
                             .update("completed", true);
-                    Toast.makeText(getContext(), "✅ Task completed!", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(getContext(), "✅ Task completed!",
+                            Toast.LENGTH_SHORT).show();
                 } else {
-                    // Swipe left = delete with confirmation
                     new AlertDialog.Builder(requireContext())
                             .setTitle("Delete Task")
                             .setMessage("Delete \"" + task.getTitle() + "\"?")
@@ -138,24 +135,24 @@ public class TasksFragment extends Fragment implements TasksAdapter.OnTaskClickL
                                 Toast.makeText(getContext(), "🗑️ Task deleted",
                                         Toast.LENGTH_SHORT).show();
                             })
-                            .setNegativeButton("Cancel", (d, w) -> {
-                                adapter.notifyItemChanged(position);
-                            })
+                            .setNegativeButton("Cancel", (d, w) ->
+                                    adapter.notifyItemChanged(position))
                             .show();
                 }
             }
 
             @Override
-            public void onChildDraw(@NonNull Canvas c, @NonNull RecyclerView recyclerView,
+            public void onChildDraw(@NonNull Canvas c,
+                                    @NonNull RecyclerView recyclerView,
                                     @NonNull RecyclerView.ViewHolder viewHolder,
-                                    float dX, float dY, int actionState, boolean isCurrentlyActive) {
+                                    float dX, float dY, int actionState,
+                                    boolean isCurrentlyActive) {
 
                 View itemView = viewHolder.itemView;
                 Paint paint = new Paint();
                 float cornerRadius = 16f;
 
                 if (dX > 0) {
-                    // Swipe right — green complete background
                     paint.setColor(Color.parseColor("#22C55E"));
                     RectF background = new RectF(
                             itemView.getLeft() + 16f,
@@ -164,7 +161,6 @@ public class TasksFragment extends Fragment implements TasksAdapter.OnTaskClickL
                             itemView.getBottom() - 12f);
                     c.drawRoundRect(background, cornerRadius, cornerRadius, paint);
 
-                    // Draw checkmark text
                     Paint textPaint = new Paint();
                     textPaint.setColor(Color.WHITE);
                     textPaint.setTextSize(40f);
@@ -175,7 +171,6 @@ public class TasksFragment extends Fragment implements TasksAdapter.OnTaskClickL
                             textPaint);
 
                 } else if (dX < 0) {
-                    // Swipe left — red delete background
                     paint.setColor(Color.parseColor("#EF4444"));
                     RectF background = new RectF(
                             itemView.getRight() + dX,
@@ -184,7 +179,6 @@ public class TasksFragment extends Fragment implements TasksAdapter.OnTaskClickL
                             itemView.getBottom() - 12f);
                     c.drawRoundRect(background, cornerRadius, cornerRadius, paint);
 
-                    // Draw delete text
                     Paint textPaint = new Paint();
                     textPaint.setColor(Color.WHITE);
                     textPaint.setTextSize(40f);
@@ -228,7 +222,6 @@ public class TasksFragment extends Fragment implements TasksAdapter.OnTaskClickL
     }
 
     private void showAddTaskDialog() {
-        // Check exact alarm permission on Android 12+
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
             AlarmManager am = (AlarmManager) requireContext()
                     .getSystemService(Context.ALARM_SERVICE);
@@ -245,7 +238,8 @@ public class TasksFragment extends Fragment implements TasksAdapter.OnTaskClickL
             dv = LayoutInflater.from(getContext())
                     .inflate(R.layout.dialog_add_task, null);
         } catch (Exception e) {
-            Toast.makeText(getContext(), "Error opening dialog", Toast.LENGTH_SHORT).show();
+            Toast.makeText(getContext(), "Error opening dialog",
+                    Toast.LENGTH_SHORT).show();
             return;
         }
 
@@ -318,9 +312,13 @@ public class TasksFragment extends Fragment implements TasksAdapter.OnTaskClickL
                     return;
                 }
 
-                boolean isRecurring = switchRecurring != null && switchRecurring.isChecked();
-                boolean alertEnabled = switchAlert == null || switchAlert.isChecked();
+                boolean isRecurring = switchRecurring != null
+                        && switchRecurring.isChecked();
+                boolean alertEnabled = switchAlert == null
+                        || switchAlert.isChecked();
 
+                // ✅ importance and category declared here
+                // so they are accessible in scheduleAlert call
                 int importance = 1;
                 if (cgImportance != null) {
                     int selId = cgImportance.getCheckedChipId();
@@ -335,6 +333,10 @@ public class TasksFragment extends Fragment implements TasksAdapter.OnTaskClickL
                     else if (selCatId == R.id.chip_work) category = "Work";
                 }
 
+                // Make final copies for lambda
+                final int finalImportance = importance;
+                final String finalCategory = category;
+
                 Calendar dueCal = Calendar.getInstance();
                 dueCal.set(selectedYear, selectedMonth, selectedDay,
                         selectedHour, selectedMinute, 0);
@@ -346,9 +348,16 @@ public class TasksFragment extends Fragment implements TasksAdapter.OnTaskClickL
                 db.collection("tasks").add(newTask).addOnSuccessListener(doc -> {
                     String taskId = doc.getId();
                     db.collection("tasks").document(taskId).update("id", taskId);
-                    if (alertEnabled) scheduleAlert(taskId, title, dueCal);
+
+                    // ✅ Now passes all 5 parameters correctly
+                    if (alertEnabled) {
+                        scheduleAlert(taskId, title, dueCal,
+                                finalImportance, finalCategory);
+                    }
+
                     dialog.dismiss();
-                    Toast.makeText(getContext(), "✅ Task added!", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(getContext(), "✅ Task added!",
+                            Toast.LENGTH_SHORT).show();
                 }).addOnFailureListener(e ->
                         Toast.makeText(getContext(), "Failed to save task",
                                 Toast.LENGTH_SHORT).show());
@@ -358,13 +367,17 @@ public class TasksFragment extends Fragment implements TasksAdapter.OnTaskClickL
         dialog.show();
     }
 
-    private void scheduleAlert(String taskId, String title, Calendar dueCal) {
+    // ✅ Correct 5-parameter version
+    private void scheduleAlert(String taskId, String title, Calendar dueCal,
+                               int importance, String category) {
         try {
             AlarmManager alarmManager = (AlarmManager) requireContext()
                     .getSystemService(Context.ALARM_SERVICE);
             Intent intent = new Intent(requireContext(), TaskAlarmReceiver.class);
             intent.putExtra("task_title", title);
             intent.putExtra("task_id", taskId);
+            intent.putExtra("task_importance", importance);
+            intent.putExtra("task_category", category);
 
             PendingIntent pendingIntent = PendingIntent.getBroadcast(
                     requireContext(), taskId.hashCode(), intent,
@@ -376,7 +389,8 @@ public class TasksFragment extends Fragment implements TasksAdapter.OnTaskClickL
                     alarmManager.setExactAndAllowWhileIdle(
                             AlarmManager.RTC_WAKEUP, alertTime, pendingIntent);
                 } else {
-                    alarmManager.setExact(AlarmManager.RTC_WAKEUP, alertTime, pendingIntent);
+                    alarmManager.setExact(
+                            AlarmManager.RTC_WAKEUP, alertTime, pendingIntent);
                 }
             }
         } catch (Exception e) {
@@ -387,7 +401,8 @@ public class TasksFragment extends Fragment implements TasksAdapter.OnTaskClickL
     private void createNotificationChannel() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             NotificationChannel channel = new NotificationChannel(
-                    "task_alerts", "Task Alerts", NotificationManager.IMPORTANCE_HIGH);
+                    "task_alerts", "Task Alerts",
+                    NotificationManager.IMPORTANCE_HIGH);
             channel.setDescription("Alerts for upcoming tasks");
             NotificationManager manager = requireContext()
                     .getSystemService(NotificationManager.class);
