@@ -34,11 +34,29 @@
             android:textColor="#0F172A"
             android:paddingStart="10dp" />
 
-        <ImageView
-            android:layout_width="28dp"
-            android:layout_height="28dp"
-            android:src="@android:drawable/ic_menu_manage"
-            android:contentDescription="Settings" />
+        <!-- Bell icon with badge -->
+        <FrameLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content">
+
+            <ImageView
+                android:id="@+id/iv_notification_bell"
+                android:layout_width="28dp"
+                android:layout_height="28dp"
+                android:src="@android:drawable/ic_popup_reminder"
+                android:contentDescription="Notifications"
+                android:clickable="true"
+                android:focusable="true" />
+
+            <!-- Red dot badge -->
+            <View
+                android:id="@+id/notification_badge"
+                android:layout_width="10dp"
+                android:layout_height="10dp"
+                android:layout_gravity="top|end"
+                android:background="#EF4444"
+                android:visibility="gone" />
+        </FrameLayout>
     </LinearLayout>
 
     <!-- Scrollable Content -->
@@ -54,11 +72,12 @@
             android:orientation="vertical"
             android:padding="20dp">
 
-            <!-- Greeting -->
+            <!-- Greeting — now dynamic -->
             <TextView
+                android:id="@+id/tv_greeting"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Hello, Zamathula!"
+                android:text="Hello!"
                 android:textSize="26sp"
                 android:textStyle="bold"
                 android:textColor="#0F172A" />
@@ -196,7 +215,7 @@
                             android:id="@+id/tv_focus_level"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="85%"
+                            android:text="0%"
                             android:textSize="28sp"
                             android:textStyle="bold"
                             android:textColor="#22C55E" />
@@ -285,7 +304,7 @@
                 </LinearLayout>
             </androidx.cardview.widget.CardView>
 
-            <!-- Missed Tasks Card (hidden by default) -->
+            <!-- Missed Tasks Card -->
             <androidx.cardview.widget.CardView
                 android:id="@+id/cv_missed_tasks"
                 android:layout_width="match_parent"
