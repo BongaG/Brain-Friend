@@ -30,4 +30,10 @@ public interface ReminderDao {
 
     @Query("UPDATE reminders SET isActive = 0 WHERE id = :id")
     void markDone(long id);
+
+    @Query("DELETE FROM reminders WHERE id = :id")
+    void deleteById(long id);
+
+    @Query("SELECT * FROM reminders ORDER BY triggerTimeMs ASC")
+    LiveData<List<ReminderEntity>> getAllReminders();
 }

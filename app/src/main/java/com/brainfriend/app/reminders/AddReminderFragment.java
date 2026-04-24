@@ -20,28 +20,24 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
-
 import com.brainfriend.app.R;
 
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Locale;
 
-
 public class AddReminderFragment extends Fragment {
 
-    // UI refs
     private TextView tvTranscribed;
     private TextView tvScheduledTime;
-    private Button  btnMic;
-    private Button  btnPickTime;
-    private Button  btnSave;
+    private Button btnMic;
+    private Button btnPickTime;
+    private Button btnSave;
 
-    // State
     private String transcribedText = "";
-    private Calendar scheduledTime  = null;
+    private Calendar scheduledTime = null;
 
-    // Permission launcher
+
     private final ActivityResultLauncher<String> permissionLauncher =
             registerForActivityResult(new ActivityResultContracts.RequestPermission(), granted -> {
                 if (granted) launchSpeechRecogniser();
@@ -49,7 +45,7 @@ public class AddReminderFragment extends Fragment {
                         "Microphone permission is needed to record your reminder", Toast.LENGTH_LONG).show();
             });
 
-    // Speech recogniser result launcher
+
     private final ActivityResultLauncher<Intent> speechLauncher =
             registerForActivityResult(new ActivityResultContracts.StartActivityForResult(), result -> {
                 if (result.getResultCode() == android.app.Activity.RESULT_OK
@@ -64,34 +60,45 @@ public class AddReminderFragment extends Fragment {
                 }
             });
 
-
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater,
                              @Nullable ViewGroup container,
                              @Nullable Bundle savedInstanceState) {
-        // Inflate your fragment_add_reminder.xml (see companion XML file)
-        return inflater.inflate(R.layout.fragment_add_reminder, container, false);
+
+        View view = inflater.inflate(R.layout.fragment_add_reminder, container, false);
+
+
+        Button btnViewReminders = view.findViewById(R.id.btn_view_reminders);
+        if (btnViewReminders != null) {
+            btnViewReminders.setOnClickListener(v -> {
+                RemindersListFragment listFragment = new RemindersListFragment();
+                requireActivity().getSupportFragmentManager()
+                        .beginTransaction()
+                        .replace(R.id.fragment_container, listFragment)
+                        .addToBackStack(null)
+                        .commit();
+            });
+        }
+
+        return view;
     }
 
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
-        tvTranscribed   = view.findViewById(R.id.tv_transcribed);
+        tvTranscribed = view.findViewById(R.id.tv_transcribed);
         tvScheduledTime = view.findViewById(R.id.tv_scheduled_time);
-        btnMic          = view.findViewById(R.id.btn_mic);
-        btnPickTime     = view.findViewById(R.id.btn_pick_time);
-        btnSave         = view.findViewById(R.id.btn_save_reminder);
+        btnMic = view.findViewById(R.id.btn_mic);
+        btnPickTime = view.findViewById(R.id.btn_pick_time);
+        btnSave = view.findViewById(R.id.btn_save_reminder);
 
         btnMic.setOnClickListener(v -> checkMicAndLaunch());
         btnPickTime.setOnClickListener(v -> showDateTimePicker());
         btnSave.setOnClickListener(v -> saveReminder());
     }
 
-    // -------------------------------------------------------------------------
-    // Speech recognition
-    // -------------------------------------------------------------------------
 
     private void checkMicAndLaunch() {
         if (ContextCompat.checkSelfPermission(requireContext(),
@@ -145,7 +152,6 @@ public class AddReminderFragment extends Fragment {
 
         ReminderEntity entity = new ReminderEntity(transcribedText, scheduledTime.getTimeInMillis());
 
-        // Insert on background thread, then schedule alarm on main thread
         new Thread(() -> {
             long newId = AppDatabase.getInstance(requireContext())
                     .reminderDao().insert(entity);
@@ -160,7 +166,7 @@ public class AddReminderFragment extends Fragment {
 
     private void clearForm() {
         transcribedText = "";
-        scheduledTime   = null;
+        scheduledTime = null;
         tvTranscribed.setVisibility(View.GONE);
         tvTranscribed.setText("");
         tvScheduledTime.setVisibility(View.GONE);
