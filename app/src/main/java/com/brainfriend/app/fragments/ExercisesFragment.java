@@ -9,6 +9,7 @@ import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import com.brainfriend.app.R;
 import com.brainfriend.app.fragments.games.WordGameFragment;
+import com.brainfriend.app.fragments.games.DualTaskFragment;
 
 public class ExercisesFragment extends Fragment {
 
@@ -22,13 +23,27 @@ public class ExercisesFragment extends Fragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
+
         View cardWordGame = view.findViewById(R.id.card_word_game);
         if (cardWordGame != null) {
             cardWordGame.setOnClickListener(v -> {
-                WordGameFragment gameFragment = new WordGameFragment();  // now the import works
+                WordGameFragment wordGame = new WordGameFragment();
                 requireActivity().getSupportFragmentManager()
                         .beginTransaction()
-                        .replace(R.id.fragment_container, gameFragment)
+                        .replace(R.id.fragment_container, wordGame)
+                        .addToBackStack(null)
+                        .commit();
+            });
+        }
+
+
+        View cardDualTask = view.findViewById(R.id.card_dual_task);
+        if (cardDualTask != null) {
+            cardDualTask.setOnClickListener(v -> {
+                DualTaskFragment dualTask = new DualTaskFragment();
+                requireActivity().getSupportFragmentManager()
+                        .beginTransaction()
+                        .replace(R.id.fragment_container, dualTask)
                         .addToBackStack(null)
                         .commit();
             });
