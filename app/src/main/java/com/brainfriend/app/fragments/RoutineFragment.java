@@ -21,7 +21,7 @@ public class RoutineFragment extends Fragment {
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_routine, container, false);
 
-        // 1. Setup Logout Button
+        // 1. Logout button
         View logoutBtn = view.findViewById(R.id.btn_logout_routine);
         if (logoutBtn != null) {
             logoutBtn.setOnClickListener(v -> {
@@ -37,7 +37,7 @@ public class RoutineFragment extends Fragment {
             });
         }
 
-        // 2. Setup Voice Reminder FAB (independently, outside logout listener)
+        // 2. Floating Action Button for Voice Reminders
         FloatingActionButton fab = view.findViewById(R.id.fab_voice_reminder);
         if (fab != null) {
             fab.setOnClickListener(v -> {
