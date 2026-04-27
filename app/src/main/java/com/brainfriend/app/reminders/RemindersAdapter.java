@@ -70,7 +70,7 @@ public class RemindersAdapter extends ListAdapter<ReminderEntity, RemindersAdapt
         TextView tvTitle, tvTime;
         ViewHolder(@NonNull View itemView) {
             super(itemView);
-            tvTitle = itemView.findViewById(R.id.tv_reminder_title);
+            tvTitle = itemView.findViewById(R.id.tv_reminder_text);
             tvTime  = itemView.findViewById(R.id.tv_reminder_time);
         }
     }

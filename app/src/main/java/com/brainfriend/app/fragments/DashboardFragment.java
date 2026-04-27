@@ -286,8 +286,6 @@ public class DashboardFragment extends Fragment {
 
     // ─── Weekly Report (Mondays only) ───
     private void checkWeeklyReport(List<Task> allTasks, View view) {
-        Calendar cal = Calendar.getInstance();
-        if (cal.get(Calendar.DAY_OF_WEEK) != Calendar.MONDAY) return;
 
         View weeklyCard = view.findViewById(R.id.cv_weekly_report);
         TextView tvWeekly = view.findViewById(R.id.tv_weekly_report);

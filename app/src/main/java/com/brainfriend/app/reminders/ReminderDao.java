@@ -36,4 +36,7 @@ public interface ReminderDao {
 
     @Query("SELECT * FROM reminders ORDER BY triggerTimeMs ASC")
     LiveData<List<ReminderEntity>> getAllReminders();
+
+    @Query("SELECT * FROM reminders ORDER BY triggerTimeMs ASC")
+    List<ReminderEntity> getAllSortedByTime();
 }
