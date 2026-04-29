@@ -32,23 +32,8 @@ public class RoutineFragment extends Fragment {
                              @Nullable Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_routine, container, false);
 
-        // Logout button
-        View logoutBtn = view.findViewById(R.id.btn_logout_routine);
-        if (logoutBtn != null) {
-            logoutBtn.setOnClickListener(v -> {
-                FirebaseAuth.getInstance().signOut();
-                try {
-                    Class<?> loginClass = Class.forName("com.brainfriend.app.LoginActivity");
-                    Intent intent = new Intent(requireContext(), loginClass);
-                    intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK
-                            | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-                    startActivity(intent);
-                } catch (ClassNotFoundException e) {
-                    Toast.makeText(getContext(), "Logged out",
-                            Toast.LENGTH_SHORT).show();
-                }
-            });
-        }
+
+
 
         // Setup RecyclerView
         llEmpty = view.findViewById(R.id.ll_routine_empty);

@@ -35,14 +35,6 @@
                     android:textSize="22sp"
                     android:textStyle="bold"
                     android:textColor="#FFFFFF" />
-
-                <ImageView
-                    android:id="@+id/btn_logout_routine"
-                    android:layout_width="24dp"
-                    android:layout_height="24dp"
-                    android:src="@android:drawable/ic_lock_power_off"
-                    app:tint="#FFFFFF"
-                    android:contentDescription="Logout" />
             </LinearLayout>
 
             <TextView

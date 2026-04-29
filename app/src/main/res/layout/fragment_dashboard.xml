@@ -34,7 +34,6 @@
             android:textColor="#0F172A"
             android:paddingStart="10dp" />
 
-        <!-- Bell icon with badge -->
         <FrameLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content">
@@ -48,7 +47,6 @@
                 android:clickable="true"
                 android:focusable="true" />
 
-            <!-- Red dot badge -->
             <View
                 android:id="@+id/notification_badge"
                 android:layout_width="10dp"
@@ -59,7 +57,6 @@
         </FrameLayout>
     </LinearLayout>
 
-    <!-- Scrollable Content -->
     <ScrollView
         android:layout_width="match_parent"
         android:layout_height="0dp"
@@ -72,7 +69,7 @@
             android:orientation="vertical"
             android:padding="20dp">
 
-            <!-- Greeting — now dynamic -->
+            <!-- Greeting -->
             <TextView
                 android:id="@+id/tv_greeting"
                 android:layout_width="wrap_content"
@@ -140,7 +137,7 @@
                 </LinearLayout>
             </androidx.cardview.widget.CardView>
 
-            <!-- Focus Tip Card (shows when focus < 50%) -->
+            <!-- Focus Tip Card -->
             <androidx.cardview.widget.CardView
                 android:id="@+id/cv_focus_tip"
                 android:layout_width="match_parent"
@@ -161,7 +158,7 @@
                     android:textColor="#92400E" />
             </androidx.cardview.widget.CardView>
 
-            <!-- Weekly Brain Report (Mondays only) -->
+            <!-- Weekly Brain Report -->
             <androidx.cardview.widget.CardView
                 android:id="@+id/cv_weekly_report"
                 android:layout_width="match_parent"
@@ -198,6 +195,101 @@
                 </LinearLayout>
             </androidx.cardview.widget.CardView>
 
+            <!-- ✅ TODAY'S GOAL PROGRESS CARD -->
+            <androidx.cardview.widget.CardView
+                android:id="@+id/cv_today_progress"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                app:cardCornerRadius="16dp"
+                app:cardElevation="2dp"
+                app:cardBackgroundColor="#FFFFFF"
+                android:layout_marginBottom="16dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="16dp">
+
+                    <!-- Header row -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical"
+                        android:layout_marginBottom="12dp">
+
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="TODAY'S GOAL"
+                            android:textSize="11sp"
+                            android:textStyle="bold"
+                            android:textColor="#94A3B8"
+                            android:letterSpacing="0.1" />
+
+                        <TextView
+                            android:id="@+id/tv_streak_badge"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="🔥 0 Day Streak"
+                            android:textSize="12sp"
+                            android:textColor="#F59E0B"
+                            android:textStyle="bold" />
+                    </LinearLayout>
+
+                    <!-- Progress percentage -->
+                    <TextView
+                        android:id="@+id/tv_today_progress_pct"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="0% Complete"
+                        android:textSize="22sp"
+                        android:textStyle="bold"
+                        android:textColor="#0F172A"
+                        android:layout_marginBottom="10dp" />
+
+                    <!-- Progress bar -->
+                    <ProgressBar
+                        android:id="@+id/pb_today"
+                        style="@android:style/Widget.ProgressBar.Horizontal"
+                        android:layout_width="match_parent"
+                        android:layout_height="10dp"
+                        android:progressTint="#2563EB"
+                        android:progressBackgroundTint="#E2E8F0"
+                        android:max="100"
+                        android:progress="0"
+                        android:layout_marginBottom="12dp" />
+
+                    <!-- Tasks done + remaining -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical">
+
+                        <TextView
+                            android:id="@+id/tv_tasks_done"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="● 0/0 Tasks Done"
+                            android:textSize="13sp"
+                            android:textColor="#2563EB"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            android:id="@+id/tv_tasks_remaining"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="0 Remaining"
+                            android:textSize="13sp"
+                            android:textColor="#94A3B8" />
+                    </LinearLayout>
+                </LinearLayout>
+            </androidx.cardview.widget.CardView>
+
             <!-- Stats Row -->
             <LinearLayout
                 android:layout_width="match_parent"
@@ -205,7 +297,6 @@
                 android:orientation="horizontal"
                 android:layout_marginBottom="20dp">
 
-                <!-- Pending Tasks -->
                 <androidx.cardview.widget.CardView
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
@@ -247,7 +338,6 @@
                     </LinearLayout>
                 </androidx.cardview.widget.CardView>
 
-                <!-- Focus Level -->
                 <androidx.cardview.widget.CardView
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
@@ -308,11 +398,14 @@
                     android:textColor="#0F172A" />
 
                 <TextView
+                    android:id="@+id/tv_view_all"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="View All"
                     android:textSize="14sp"
-                    android:textColor="#2563EB" />
+                    android:textColor="#2563EB"
+                    android:clickable="true"
+                    android:focusable="true" />
             </LinearLayout>
 
             <!-- Up Next Card -->
@@ -386,5 +479,4 @@
 
         </LinearLayout>
     </ScrollView>
-
 </LinearLayout>

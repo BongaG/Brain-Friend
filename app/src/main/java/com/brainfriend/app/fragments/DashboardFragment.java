@@ -31,6 +31,7 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
+import android.widget.ProgressBar;
 
 public class DashboardFragment extends Fragment {
 
@@ -106,25 +107,42 @@ public class DashboardFragment extends Fragment {
                     for (Task t : allTasks) {
                         if (t.isCompleted()) {
                             completed++;
+                            // Replace all notificationItems.add() calls with these:
+
+// For completed tasks:
+                            // Completed
                             notificationItems.add(new NotificationItem(
                                     "✅ Completed",
                                     "\"" + t.getTitle() + "\" is done",
-                                    NotificationItem.TYPE_DONE));
-                        } else if (t.getDueDate() != null && t.getDueDate().before(now)) {
+                                    NotificationItem.TYPE_DONE,
+                                    t.getId(),
+                                    t.getTitle(),
+                                    t.getImportance(),
+                                    t.getCategory()));
+
+// Overdue
                             notificationItems.add(new NotificationItem(
                                     "⚠️ Overdue",
                                     "\"" + t.getTitle() + "\" is overdue",
-                                    NotificationItem.TYPE_OVERDUE));
-                        } else if (t.getDueDate() != null) {
-                            long diff = t.getDueDate().getTime() - now.getTime();
-                            if (diff > 0 && diff <= 15 * 60 * 1000) {
-                                notificationItems.add(new NotificationItem(
-                                        "🔔 Starting Soon",
-                                        "\"" + t.getTitle() + "\" starts in 15 minutes",
-                                        NotificationItem.TYPE_ALERT));
+                                    NotificationItem.TYPE_OVERDUE,
+                                    t.getId(),
+                                    t.getTitle(),
+                                    t.getImportance(),
+                                    t.getCategory()));
+
+// Starting soon
+                            notificationItems.add(new NotificationItem(
+                                    "🔔 Starting Soon",
+                                    "\"" + t.getTitle() + "\" starts in 15 minutes",
+                                    NotificationItem.TYPE_ALERT,
+                                    t.getId(),
+                                    t.getTitle(),
+                                    t.getImportance(),
+                                    t.getCategory()));
                             }
                         }
-                    }
+
+                    // Update notification items}
 
                     // Focus level
                     int focusLevel = total > 0 ? (completed * 100 / total) : 0;
@@ -191,35 +209,106 @@ public class DashboardFragment extends Fragment {
                 });
 
         // Pending tasks
+        // Pending tasks — for count + Up Next + Today Progress
         db.collection("tasks")
                 .whereEqualTo("userId", userId)
-                .whereEqualTo("completed", false)
-                .orderBy("importance", Query.Direction.DESCENDING)
-                .orderBy("dueDate", Query.Direction.ASCENDING)
                 .addSnapshotListener((val, err) -> {
                     if (!isAdded() || val == null) return;
-                    List<Task> tasks = val.toObjects(Task.class);
+                    List<Task> allTasks = val.toObjects(Task.class);
 
+                    // Get today's date range
+                    Calendar startOfDay = Calendar.getInstance();
+                    startOfDay.set(Calendar.HOUR_OF_DAY, 0);
+                    startOfDay.set(Calendar.MINUTE, 0);
+                    startOfDay.set(Calendar.SECOND, 0);
+                    Calendar endOfDay = Calendar.getInstance();
+                    endOfDay.set(Calendar.HOUR_OF_DAY, 23);
+                    endOfDay.set(Calendar.MINUTE, 59);
+                    endOfDay.set(Calendar.SECOND, 59);
+
+                    // Filter today's tasks
+                    int todayTotal = 0;
+                    int todayDone = 0;
+                    int pendingCount = 0;
+                    Date now = new Date();
+
+                    for (Task t : allTasks) {
+                        // Count pending
+                        if (!t.isCompleted()) pendingCount++;
+
+                        // Count today's tasks
+                        if (t.getDueDate() != null) {
+                            long due = t.getDueDate().getTime();
+                            if (due >= startOfDay.getTimeInMillis()
+                                    && due <= endOfDay.getTimeInMillis()) {
+                                todayTotal++;
+                                if (t.isCompleted()) todayDone++;
+                            }
+                        }
+                    }
+
+                    // Pending count
                     TextView tvPending = view.findViewById(R.id.tv_pending_count);
-                    if (tvPending != null) tvPending.setText(String.valueOf(tasks.size()));
+                    if (tvPending != null) tvPending.setText(String.valueOf(pendingCount));
 
+                    // Today's progress
+                    int progressPct = todayTotal > 0 ? (todayDone * 100 / todayTotal) : 0;
+                    int remaining = todayTotal - todayDone;
+
+                    ProgressBar pbToday = view.findViewById(R.id.pb_today);
+                    TextView tvProgressPct = view.findViewById(R.id.tv_today_progress_pct);
+                    TextView tvTasksDone = view.findViewById(R.id.tv_tasks_done);
+                    TextView tvTasksRemaining = view.findViewById(R.id.tv_tasks_remaining);
+                    TextView tvStreak = view.findViewById(R.id.tv_streak_badge);
+
+                    if (pbToday != null) pbToday.setProgress(progressPct);
+                    if (tvProgressPct != null) tvProgressPct.setText(progressPct + "% Complete");
+                    if (tvTasksDone != null) tvTasksDone.setText("● " + todayDone + "/" + todayTotal + " Tasks Done");
+                    if (tvTasksRemaining != null) tvTasksRemaining.setText(remaining + " Remaining");
+
+                    // Streak — count consecutive days with at least 1 completed task
+                    if (tvStreak != null) tvStreak.setText("🔥 " + todayDone + " Done Today");
+
+                    // Up Next — show next incomplete task due today
                     TextView tvStatus = view.findViewById(R.id.tv_upcoming_status);
                     TextView tvTitle = view.findViewById(R.id.tv_upcoming_title);
                     TextView tvTime = view.findViewById(R.id.tv_upcoming_time);
 
-                    if (!tasks.isEmpty()) {
-                        Task next = tasks.get(0);
+                    Task nextTask = null;
+                    for (Task t : allTasks) {
+                        if (!t.isCompleted() && t.getDueDate() != null
+                                && t.getDueDate().after(now)) {
+                            if (nextTask == null || t.getDueDate().before(nextTask.getDueDate())) {
+                                nextTask = t;
+                            }
+                        }
+                    }
+
+                    if (nextTask != null) {
+                        Task finalNext = nextTask;
                         if (tvStatus != null) tvStatus.setVisibility(View.VISIBLE);
-                        if (tvTitle != null) tvTitle.setText(next.getTitle());
+                        if (tvTitle != null) tvTitle.setText(finalNext.getTitle());
                         if (tvTime != null) {
                             SimpleDateFormat sdf = new SimpleDateFormat(
                                     "EEE, dd MMM 'at' HH:mm", Locale.getDefault());
-                            tvTime.setText(sdf.format(next.getDueDate()));
+                            tvTime.setText(sdf.format(finalNext.getDueDate()));
                         }
                     } else {
                         if (tvStatus != null) tvStatus.setVisibility(View.GONE);
                         if (tvTitle != null) tvTitle.setText("All clear! Relax or add a new task.");
                         if (tvTime != null) tvTime.setText("");
+                    }
+
+                    // View All navigates to Tasks tab
+                    TextView tvViewAll = view.findViewById(R.id.tv_view_all);
+                    if (tvViewAll != null) {
+                        tvViewAll.setOnClickListener(v2 -> {
+                            if (getActivity() != null) {
+                                com.google.android.material.bottomnavigation.BottomNavigationView nav =
+                                        getActivity().findViewById(R.id.bottom_navigation);
+                                if (nav != null) nav.setSelectedItemId(R.id.nav_tasks);
+                            }
+                        });
                     }
                 });
     }

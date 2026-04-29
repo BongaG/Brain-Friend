@@ -187,6 +187,51 @@ public class AiInsightsHelper {
         }).start();
     }
 
+    // ─── AI Completion Message ───
+    public static void getCompletionMessage(String taskTitle, int importance,
+                                            String category, AiCallback callback) {
+        new Thread(() -> {
+            try {
+                String priorityWord = importance == 3 ? "high priority" :
+                        importance == 2 ? "medium priority" : "low priority";
+
+                String prompt = "You are Brain Friend AI. The user just completed a task. " +
+                        "Task: \"" + taskTitle + "\" | Priority: " + priorityWord +
+                        " | Category: " + category + "\n" +
+                        "Write a SHORT celebratory message (1-2 sentences max). " +
+                        "Be genuine and specific to the task. Use 1 emoji. " +
+                        "Sound like a proud friend, not a robot.";
+
+                callClaude(prompt, callback);
+            } catch (Exception e) {
+                callback.onError("Great job completing that task!");
+            }
+        }).start();
+    }
+
+    // ─── AI Missed Task Message ───
+    public static void getMissedTaskMessage(String taskTitle, int importance,
+                                            String category, AiCallback callback) {
+        new Thread(() -> {
+            try {
+                String urgency = importance == 3 ? "URGENT — this was high priority" :
+                        importance == 2 ? "medium priority" : "low priority";
+
+                String prompt = "You are Brain Friend AI. The user missed a task. " +
+                        "Task: \"" + taskTitle + "\" | Priority: " + urgency +
+                        " | Category: " + category + "\n" +
+                        "Write a SHORT motivating message (1-2 sentences max). " +
+                        "Acknowledge the miss without being harsh. " +
+                        "Encourage them to reschedule it now. Use 1 emoji. " +
+                        "Be specific to the task name.";
+
+                callClaude(prompt, callback);
+            } catch (Exception e) {
+                callback.onError("This task needs attention — reschedule it now!");
+            }
+        }).start();
+    }
+
     // ─── Core API caller ───
     private static void callClaude(String prompt, AiCallback callback) {
         try {
