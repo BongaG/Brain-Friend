@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string-array name="memory_difficulty_levels">
+        <item>Easy (4 pairs, 90s)</item>
+        <item>Medium (5 pairs, 75s)</item>
+        <item>Hard (6 pairs, 60s)</item>
+    </string-array>
+</resources>

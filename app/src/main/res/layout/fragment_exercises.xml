@@ -24,9 +24,9 @@
         android:textColor="#6B63A0"
         android:layout_marginBottom="32dp" />
 
-    <!-- Word Scramble Game Card -->
+    <!-- Sequencing Game Card -->
     <androidx.cardview.widget.CardView
-        android:id="@+id/card_word_game"
+        android:id="@+id/card_sequencing_game"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginBottom="16dp"
@@ -46,26 +46,32 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="📝 Word Scramble Game"
+                android:text="📅 Step Sequencing"
                 android:textSize="18sp"
                 android:textStyle="bold"
                 android:textColor="#3B2F6E" />
 
-            <TextView
+            <Button
+                android:id="@+id/btn_start_sequencing"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Play ➡️"
-                android:textSize="14sp"
-                android:textColor="#5B4FCF" />
+                android:text="▶️"
+                android:textSize="20sp"
+                android:textColor="#FFFFFF"
+                android:backgroundTint="#5B4FCF"
+                android:paddingLeft="16dp"
+                android:paddingRight="16dp"
+                android:paddingTop="8dp"
+                android:paddingBottom="8dp" />
         </LinearLayout>
     </androidx.cardview.widget.CardView>
 
-    <!-- Dual Task Challenge Card -->
+    <!-- Memory Match Card -->
     <androidx.cardview.widget.CardView
-        android:id="@+id/card_dual_task"
+        android:id="@+id/card_memory_match"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
+        android:layout_marginBottom="16dp"
         app:cardCornerRadius="16dp"
         app:cardElevation="2dp"
         app:cardBackgroundColor="#FFFFFF"
@@ -82,17 +88,65 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="🧩 Dual Task Challenge"
+                android:text="🃏 Memory Match"
                 android:textSize="18sp"
                 android:textStyle="bold"
                 android:textColor="#3B2F6E" />
 
-            <TextView
+            <Button
+                android:id="@+id/btn_start_memory"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Play ➡️"
-                android:textSize="14sp"
-                android:textColor="#5B4FCF" />
+                android:text="▶️"
+                android:textSize="20sp"
+                android:textColor="#FFFFFF"
+                android:backgroundTint="#5B4FCF"
+                android:paddingLeft="16dp"
+                android:paddingRight="16dp"
+                android:paddingTop="8dp"
+                android:paddingBottom="8dp" />
+        </LinearLayout>
+    </androidx.cardview.widget.CardView>
+
+    <!-- Auditory Sequence Recall Card -->
+    <androidx.cardview.widget.CardView
+        android:id="@+id/card_audio_sequence"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="16dp"
+        app:cardCornerRadius="16dp"
+        app:cardElevation="2dp"
+        app:cardBackgroundColor="#FFFFFF"
+        android:foreground="?android:attr/selectableItemBackground">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:padding="20dp"
+            android:gravity="center_vertical">
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="🎧 Auditory Sequence"
+                android:textSize="18sp"
+                android:textStyle="bold"
+                android:textColor="#3B2F6E" />
+
+            <Button
+                android:id="@+id/btn_start_audio"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="▶️"
+                android:textSize="20sp"
+                android:textColor="#FFFFFF"
+                android:backgroundTint="#5B4FCF"
+                android:paddingLeft="16dp"
+                android:paddingRight="16dp"
+                android:paddingTop="8dp"
+                android:paddingBottom="8dp" />
         </LinearLayout>
     </androidx.cardview.widget.CardView>
 

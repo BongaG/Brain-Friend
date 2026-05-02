@@ -2,4 +2,15 @@
     <string name="app_name">Brain Friend</string>
     <!-- TODO: Remove or change this placeholder text -->
     <string name="hello_blank_fragment">Hello blank fragment</string>
+    <string name="audio_game_title">🎧 Auditory Sequence Recall</string>
+    <string name="audio_game_desc">Listen to the sounds and repeat the order</string>
+    <string name="round_info">Round %d - Length %d</string>
+    <string name="score_label">Score: %d</string>
+    <string name="btn_play">Play Sequence</string>
+    <string name="btn_new_game">New Game</string>
+    <string name="instruction_listen">Listen to the numbers...</string>
+    <string name="instruction_repeat">Now repeat by tapping buttons 1,2,3</string>
+    <string name="instruction_press_play">Press PLAY to hear the sequence</string>
+    <string name="feedback_correct">✅ Correct! Next round length %d</string>
+    <string name="feedback_wrong">❌ Wrong sequence! Game over. Score: %d</string>
 </resources>

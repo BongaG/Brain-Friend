@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="16dp"
+    android:background="#F8F6FF">
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="🎧 Auditory Sequence Recall"
+        android:textSize="24sp"
+        android:textStyle="bold"
+        android:textColor="#3B2F6E"
+        android:layout_marginBottom="8dp" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Listen to the sounds and repeat the order"
+        android:textSize="14sp"
+        android:textColor="#6B63A0"
+        android:layout_marginBottom="24dp" />
+
+    <TextView
+        android:id="@+id/tv_round_info"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Round 1 - Length 3"
+        android:textSize="16sp"
+        android:textStyle="bold"
+        android:textColor="#5B4FCF"
+        android:layout_marginBottom="16dp" />
+
+    <TextView
+        android:id="@+id/tv_score_audio"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Score: 0"
+        android:textSize="16sp"
+        android:textColor="#3B2F6E"
+        android:layout_marginBottom="24dp" />
+
+    <!-- Buttons representing the three sounds -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center"
+        android:layout_marginBottom="24dp">
+
+        <Button
+            android:id="@+id/btn_sound1"
+            android:layout_width="80dp"
+            android:layout_height="80dp"
+            android:layout_margin="8dp"
+            android:backgroundTint="#E53935"
+            android:text="🔴" />
+
+        <Button
+            android:id="@+id/btn_sound2"
+            android:layout_width="80dp"
+            android:layout_height="80dp"
+            android:layout_margin="8dp"
+            android:backgroundTint="#43A047"
+            android:text="🟢" />
+
+        <Button
+            android:id="@+id/btn_sound3"
+            android:layout_width="80dp"
+            android:layout_height="80dp"
+            android:layout_margin="8dp"
+            android:backgroundTint="#1E88E5"
+            android:text="🔵" />
+    </LinearLayout>
+
+    <TextView
+        android:id="@+id/tv_instruction"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Press PLAY to hear the sequence"
+        android:textSize="14sp"
+        android:textColor="#6B63A0"
+        android:layout_marginBottom="16dp"
+        android:layout_gravity="center" />
+
+    <Button
+        android:id="@+id/btn_play_sequence"
+        android:layout_width="match_parent"
+        android:layout_height="56dp"
+        android:text="Play Sequence"
+        android:backgroundTint="#5B4FCF"
+        android:textColor="#FFFFFF"
+        android:layout_marginBottom="16dp" />
+
+    <Button
+        android:id="@+id/btn_reset_audio"
+        android:layout_width="match_parent"
+        android:layout_height="56dp"
+        android:text="New Game"
+        android:backgroundTint="#7B68EE"
+        android:textColor="#FFFFFF"
+        android:visibility="gone" />
+
+    <TextView
+        android:id="@+id/tv_feedback_audio"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textSize="14sp"
+        android:textColor="#6B63A0"
+        android:layout_marginTop="16dp"
+        android:visibility="gone"
+        android:layout_gravity="center" />
+</LinearLayout>
