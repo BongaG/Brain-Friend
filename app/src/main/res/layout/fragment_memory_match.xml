@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="16dp"
+    android:background="#F8F6FF">
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="🧠 Memory Match"
+        android:textSize="24sp"
+        android:textStyle="bold"
+        android:textColor="#3B2F6E"
+        android:layout_marginBottom="8dp" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Flip cards and match the pairs"
+        android:textSize="14sp"
+        android:textColor="#6B63A0"
+        android:layout_marginBottom="16dp" />
+
+    <!-- Difficulty Spinner -->
+    <Spinner
+        android:id="@+id/spinner_difficulty_memory"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="16dp"
+        android:entries="@array/memory_difficulty_levels"
+        android:background="@android:drawable/editbox_background" />
+
+    <!-- Info row: Score, Attempts, Timer -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_marginBottom="16dp">
+
+        <TextView
+            android:id="@+id/tv_score_memory"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Matches: 0 / 0"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            android:textColor="#5B4FCF" />
+
+        <TextView
+            android:id="@+id/tv_attempts"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Attempts: 0"
+            android:textSize="14sp"
+            android:textColor="#6B63A0" />
+
+        <TextView
+            android:id="@+id/tv_timer"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Time: 0s"
+            android:textSize="14sp"
+            android:textColor="#E53935"
+            android:textStyle="bold"
+            android:gravity="end" />
+    </LinearLayout>
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/rv_memory_grid"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1" />
+
+    <Button
+        android:id="@+id/btn_reset_memory"
+        android:layout_width="match_parent"
+        android:layout_height="56dp"
+        android:text="New Game"
+        android:backgroundTint="#5B4FCF"
+        android:textColor="#FFFFFF"
+        android:layout_marginTop="16dp" />
+
+    <TextView
+        android:id="@+id/tv_feedback_memory"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textSize="14sp"
+        android:textColor="#6B63A0"
+        android:layout_marginTop="8dp"
+        android:visibility="gone"
+        android:layout_gravity="center" />
+</LinearLayout>

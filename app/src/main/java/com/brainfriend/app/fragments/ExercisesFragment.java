@@ -4,12 +4,14 @@ import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import com.brainfriend.app.R;
-import com.brainfriend.app.fragments.games.WordGameFragment;
-import com.brainfriend.app.fragments.games.DualTaskFragment;
+import com.brainfriend.app.fragments.games.AudioSequenceFragment;
+import com.brainfriend.app.fragments.games.SequencingGameFragment;
+import com.brainfriend.app.fragments.games.MemoryMatchFragment;   // add this import
 
 public class ExercisesFragment extends Fragment {
 
@@ -23,30 +25,33 @@ public class ExercisesFragment extends Fragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
+        // Sequencing Game button
+        Button btnStart = view.findViewById(R.id.btn_start_sequencing);
+        btnStart.setOnClickListener(v -> {
+            requireActivity().getSupportFragmentManager()
+                    .beginTransaction()
+                    .replace(R.id.fragment_container, new SequencingGameFragment())
+                    .addToBackStack(null)
+                    .commit();
+        });
 
-        View cardWordGame = view.findViewById(R.id.card_word_game);
-        if (cardWordGame != null) {
-            cardWordGame.setOnClickListener(v -> {
-                WordGameFragment wordGame = new WordGameFragment();
-                requireActivity().getSupportFragmentManager()
-                        .beginTransaction()
-                        .replace(R.id.fragment_container, wordGame)
-                        .addToBackStack(null)
-                        .commit();
-            });
-        }
+        // Memory Match button
+        Button btnMemory = view.findViewById(R.id.btn_start_memory);
+        btnMemory.setOnClickListener(v -> {
+            requireActivity().getSupportFragmentManager()
+                    .beginTransaction()
+                    .replace(R.id.fragment_container, new MemoryMatchFragment())
+                    .addToBackStack(null)
+                    .commit();
+        });
 
-
-        View cardDualTask = view.findViewById(R.id.card_dual_task);
-        if (cardDualTask != null) {
-            cardDualTask.setOnClickListener(v -> {
-                DualTaskFragment dualTask = new DualTaskFragment();
-                requireActivity().getSupportFragmentManager()
-                        .beginTransaction()
-                        .replace(R.id.fragment_container, dualTask)
-                        .addToBackStack(null)
-                        .commit();
-            });
-        }
+        Button btnAudio = view.findViewById(R.id.btn_start_audio);
+        btnAudio.setOnClickListener(v -> {
+            requireActivity().getSupportFragmentManager()
+                    .beginTransaction()
+                    .replace(R.id.fragment_container, new AudioSequenceFragment())
+                    .addToBackStack(null)
+                    .commit();
+        });
     }
 }

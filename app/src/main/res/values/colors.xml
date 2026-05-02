@@ -9,4 +9,8 @@
     <color name="brain_bg">#F8FAFC</color>
     <color name="nav_active">#2563EB</color>
     <color name="nav_inactive">#94A3B8</color>
+    <color name="red_button">#E53935</color>
+    <color name="green_button">#43A047</color>
+    <color name="blue_button">#1E88E5</color>
+    <color name="orange_flash">#FFB74D</color>
 </resources>
