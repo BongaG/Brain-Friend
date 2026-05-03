@@ -288,4 +288,8 @@ public class AiInsightsHelper {
             callback.onError("AI temporarily unavailable");
         }
     }
+    // Public version of callClaude for direct use
+    public static void callCognitivePrompt(String prompt, AiCallback callback) {
+        new Thread(() -> callClaude(prompt, callback)).start();
+    }
 }
