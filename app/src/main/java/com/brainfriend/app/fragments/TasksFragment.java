@@ -349,15 +349,24 @@ public class TasksFragment extends Fragment implements TasksAdapter.OnTaskClickL
                     String taskId = doc.getId();
                     db.collection("tasks").document(taskId).update("id", taskId);
 
-                    // ✅ Now passes all 5 parameters correctly
+                    // Schedule 10 min alert
                     if (alertEnabled) {
                         scheduleAlert(taskId, title, dueCal,
                                 finalImportance, finalCategory);
                     }
 
+                    // If recurring — schedule daily notification
+                    if (isRecurring) {
+                        scheduleDailyRoutineNotification(
+                                taskId, title, selectedHour,
+                                selectedMinute, finalImportance, finalCategory);
+                    }
+
                     dialog.dismiss();
-                    Toast.makeText(getContext(), "✅ Task added!",
+                    Toast.makeText(getContext(),
+                            isRecurring ? "✅ Task added to Routine!" : "✅ Task added!",
                             Toast.LENGTH_SHORT).show();
+
                 }).addOnFailureListener(e ->
                         Toast.makeText(getContext(), "Failed to save task",
                                 Toast.LENGTH_SHORT).show());
@@ -430,6 +439,51 @@ public class TasksFragment extends Fragment implements TasksAdapter.OnTaskClickL
         if (task != null && task.getId() != null) {
             db.collection("tasks").document(task.getId())
                     .update("completed", isChecked);
+        }
+    }
+
+    // ─── Schedule daily notification for routine tasks ───
+    private void scheduleDailyRoutineNotification(String taskId, String title,
+                                                  int hour, int minute,
+                                                  int importance, String category) {
+        try {
+            AlarmManager alarmManager = (AlarmManager) requireContext()
+                    .getSystemService(Context.ALARM_SERVICE);
+
+            Intent intent = new Intent(requireContext(), TaskAlarmReceiver.class);
+            intent.putExtra("task_title", title);
+            intent.putExtra("task_id", taskId);
+            intent.putExtra("task_importance", importance);
+            intent.putExtra("task_category", category);
+            intent.putExtra("is_routine", true);
+
+            PendingIntent pendingIntent = PendingIntent.getBroadcast(
+                    requireContext(),
+                    ("routine_" + taskId).hashCode(),
+                    intent,
+                    PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
+
+            // Set alarm for today at the task time
+            Calendar cal = Calendar.getInstance();
+            cal.set(Calendar.HOUR_OF_DAY, hour);
+            cal.set(Calendar.MINUTE, minute);
+            cal.set(Calendar.SECOND, 0);
+
+            // If time already passed today, start tomorrow
+            if (cal.getTimeInMillis() <= System.currentTimeMillis()) {
+                cal.add(Calendar.DAY_OF_YEAR, 1);
+            }
+
+            if (alarmManager != null) {
+                // setRepeating fires every 24 hours
+                alarmManager.setRepeating(
+                        AlarmManager.RTC_WAKEUP,
+                        cal.getTimeInMillis(),
+                        AlarmManager.INTERVAL_DAY,
+                        pendingIntent);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
         }
     }
 }

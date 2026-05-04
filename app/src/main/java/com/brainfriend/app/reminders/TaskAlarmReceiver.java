@@ -27,7 +27,7 @@ public class TaskAlarmReceiver extends BroadcastReceiver {
                 context, 0, mainIntent,
                 PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
 
-        // Step 1 — Show immediate basic notification
+
         showNotification(context, taskTitle,
                 "⏰ " + taskTitle + " starts in 10 minutes — get ready!",
                 pendingIntent, notifId);
