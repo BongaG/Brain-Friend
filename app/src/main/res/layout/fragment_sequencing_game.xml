@@ -13,7 +13,7 @@
         android:text="Morning Routine"
         android:textSize="22sp"
         android:textStyle="bold"
-        android:textColor="#3B2F6E"
+        android:textColor="#2563EB"
         android:layout_marginBottom="8dp" />
 
     <TextView
@@ -22,7 +22,7 @@
         android:layout_height="wrap_content"
         android:text="Drag the steps into the correct order:"
         android:textSize="14sp"
-        android:textColor="#6B63A0"
+        android:textColor="#2563EB"
         android:layout_marginBottom="16dp" />
 
     <androidx.recyclerview.widget.RecyclerView
@@ -36,7 +36,7 @@
         android:layout_width="match_parent"
         android:layout_height="56dp"
         android:text="Check Order"
-        android:backgroundTint="#5B4FCF"
+        android:backgroundTint="#2563EB"
         android:textColor="#FFFFFF"
         android:layout_marginTop="16dp" />
 
@@ -45,7 +45,7 @@
         android:layout_width="match_parent"
         android:layout_height="56dp"
         android:text="Next Scenario ➡️"
-        android:backgroundTint="#7B68EE"
+        android:backgroundTint="#2563EB"
         android:textColor="#FFFFFF"
         android:visibility="gone" />
 
@@ -55,7 +55,7 @@
         android:layout_height="wrap_content"
         android:text="Score: 0"
         android:textSize="18sp"
-        android:textColor="#3B2F6E"
+        android:textColor="#2563EB"
         android:layout_marginTop="16dp"
         android:textStyle="bold" />
 
@@ -64,7 +64,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:textSize="14sp"
-        android:textColor="#6B63A0"
+        android:textColor="#2563EB"
         android:layout_marginTop="8dp"
         android:visibility="gone" />
 </LinearLayout>

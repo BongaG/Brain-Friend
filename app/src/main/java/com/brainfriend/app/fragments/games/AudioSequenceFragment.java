@@ -12,6 +12,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import com.brainfriend.app.R;
+import com.brainfriend.app.utils.StatsManager;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
@@ -28,7 +29,11 @@ public class AudioSequenceFragment extends Fragment implements TextToSpeech.OnIn
     private int round = 1;
     private boolean isPlayingSequence = false;
     private boolean isAwaitingUserInput = false;
-    private final Handler handler = new Handler();  // ✅ now final
+    private final Handler handler = new Handler();
+
+    // Stats tracking
+    private StatsManager statsManager;
+    private boolean gameEndRecorded = false;
 
     @Nullable
     @Override
@@ -51,6 +56,7 @@ public class AudioSequenceFragment extends Fragment implements TextToSpeech.OnIn
         btnReset = view.findViewById(R.id.btn_reset_audio);
 
         tts = new TextToSpeech(getContext(), this);
+        statsManager = new StatsManager(requireContext());
 
         btnPlaySequence.setOnClickListener(v -> startNewRound());
         btnReset.setOnClickListener(v -> resetGame());
@@ -72,6 +78,7 @@ public class AudioSequenceFragment extends Fragment implements TextToSpeech.OnIn
         score = 0;
         currentLength = 3;
         round = 1;
+        gameEndRecorded = false;          // ✅ reset flag
         updateUI();
         tvFeedback.setVisibility(View.GONE);
         btnReset.setVisibility(View.GONE);
@@ -122,8 +129,6 @@ public class AudioSequenceFragment extends Fragment implements TextToSpeech.OnIn
 
     private void flashButton(int item) {
         Button btn = getButtonForItem(item);
-        // Use color resource for flash
-        int flashColor = getResources().getColor(R.color.orange_flash);
         btn.setBackgroundTintList(getResources().getColorStateList(R.color.orange_flash));
         handler.postDelayed(() -> {
             int originalColor = getOriginalColorForItem(item);
@@ -172,6 +177,16 @@ public class AudioSequenceFragment extends Fragment implements TextToSpeech.OnIn
                     startNewRound();
                 }, 1500);
             } else {
+                // Game over – record stats
+                if (!gameEndRecorded) {
+                    gameEndRecorded = true;
+                    statsManager.recordPlay();
+                    statsManager.setAudioLevel(round);
+                    // Percentage based on points earned vs maximum possible for that round
+                    int maxPossible = round * 10;
+                    int percentage = (score * 100) / maxPossible;
+                    statsManager.setAudioScore(percentage);
+                }
                 tvFeedback.setText(getString(R.string.feedback_wrong, score));
                 tvFeedback.setVisibility(View.VISIBLE);
                 btnPlaySequence.setEnabled(false);

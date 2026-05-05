@@ -17,6 +17,7 @@ import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import com.brainfriend.app.R;
+import com.brainfriend.app.utils.StatsManager;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -48,6 +49,10 @@ public class MemoryMatchFragment extends Fragment implements TextToSpeech.OnInit
     private final String[] emojiNames = {"📘", "🎒", "⏰", "🍎", "✏️", "📏"}; // up to 6 pairs
     private final String[] spokenWords = {"book", "backpack", "clock", "apple", "pencil", "ruler"};
 
+    // Stats tracking
+    private StatsManager statsManager;
+    private boolean gameEndRecorded = false;
+
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
@@ -67,6 +72,7 @@ public class MemoryMatchFragment extends Fragment implements TextToSpeech.OnInit
         spinnerDifficulty = view.findViewById(R.id.spinner_difficulty_memory);
 
         tts = new TextToSpeech(getContext(), this);
+        statsManager = new StatsManager(requireContext());
 
         ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(getContext(),
                 R.array.memory_difficulty_levels, android.R.layout.simple_spinner_item);
@@ -135,6 +141,7 @@ public class MemoryMatchFragment extends Fragment implements TextToSpeech.OnInit
         secondPosition = -1;
         isWaiting = false;
         gameActive = true;
+        gameEndRecorded = false;   // reset flag
         updateUI();
 
         // Start timer
@@ -156,7 +163,11 @@ public class MemoryMatchFragment extends Fragment implements TextToSpeech.OnInit
                         tvFeedback.setText("⏰ Time's up! Game over.");
                         tvFeedback.setVisibility(View.VISIBLE);
                         btnReset.setVisibility(View.VISIBLE);
-                        // Disable further card clicks
+                        // Record stats for timeout (percentage based on matched pairs)
+                        if (!gameEndRecorded) {
+                            gameEndRecorded = true;
+                            recordStats();
+                        }
                         adapter.notifyDataSetChanged();
                     }
                 }
@@ -183,13 +194,28 @@ public class MemoryMatchFragment extends Fragment implements TextToSpeech.OnInit
     private void updateUI() {
         tvScore.setText("Matches: " + matchesFound + " / " + totalPairs);
         tvAttempts.setText("Attempts: " + attempts);
-        if (matchesFound == totalPairs) {
+        if (matchesFound == totalPairs && !gameEndRecorded) {
             gameActive = false;
             stopTimer();
             tvFeedback.setText("🎉 You won! Great memory!");
             tvFeedback.setVisibility(View.VISIBLE);
             btnReset.setVisibility(View.VISIBLE);
+            // Record stats for win
+            if (!gameEndRecorded) {
+                gameEndRecorded = true;
+                recordStats();
+            }
         }
+    }
+
+    private void recordStats() {
+        statsManager.recordPlay();
+        int level = spinnerDifficulty.getSelectedItemPosition() + 1; // 1=Easy,2=Medium,3=Hard
+        int percentage = (matchesFound * 100) / totalPairs;
+        android.util.Log.d("MemoryMatch", "Recording stats - level: " + level + ", score: " + percentage);
+        statsManager.recordPlay();
+        statsManager.setMemoryLevel(level);
+        statsManager.setMemoryScore(percentage);
     }
 
     private void onCardClick(int position) {

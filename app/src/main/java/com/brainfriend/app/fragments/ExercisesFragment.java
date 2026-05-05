@@ -53,5 +53,14 @@ public class ExercisesFragment extends Fragment {
                     .addToBackStack(null)
                     .commit();
         });
+
+        Button btnProgress = view.findViewById(R.id.btn_progress);
+        btnProgress.setOnClickListener(v -> {
+            requireActivity().getSupportFragmentManager()
+                    .beginTransaction()
+                    .replace(R.id.fragment_container, new ProgressFragment())
+                    .addToBackStack(null)
+                    .commit();
+        });
     }
 }

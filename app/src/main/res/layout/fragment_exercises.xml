@@ -13,7 +13,7 @@
         android:text="🧠 Brain Exercises"
         android:textSize="24sp"
         android:textStyle="bold"
-        android:textColor="#3B2F6E"
+        android:textColor="#2563EB"
         android:layout_marginBottom="16dp" />
 
     <TextView
@@ -21,7 +21,7 @@
         android:layout_height="wrap_content"
         android:text="Train your brain with fun games"
         android:textSize="14sp"
-        android:textColor="#6B63A0"
+        android:textColor="#2563EB"
         android:layout_marginBottom="32dp" />
 
     <!-- Sequencing Game Card -->
@@ -49,7 +49,7 @@
                 android:text="📅 Step Sequencing"
                 android:textSize="18sp"
                 android:textStyle="bold"
-                android:textColor="#3B2F6E" />
+                android:textColor="#2563EB" />
 
             <Button
                 android:id="@+id/btn_start_sequencing"
@@ -58,7 +58,7 @@
                 android:text="▶️"
                 android:textSize="20sp"
                 android:textColor="#FFFFFF"
-                android:backgroundTint="#5B4FCF"
+                android:backgroundTint="#2563EB"
                 android:paddingLeft="16dp"
                 android:paddingRight="16dp"
                 android:paddingTop="8dp"
@@ -91,7 +91,7 @@
                 android:text="🃏 Memory Match"
                 android:textSize="18sp"
                 android:textStyle="bold"
-                android:textColor="#3B2F6E" />
+                android:textColor="#2563EB" />
 
             <Button
                 android:id="@+id/btn_start_memory"
@@ -100,7 +100,7 @@
                 android:text="▶️"
                 android:textSize="20sp"
                 android:textColor="#FFFFFF"
-                android:backgroundTint="#5B4FCF"
+                android:backgroundTint="#2563EB"
                 android:paddingLeft="16dp"
                 android:paddingRight="16dp"
                 android:paddingTop="8dp"
@@ -133,7 +133,7 @@
                 android:text="🎧 Auditory Sequence"
                 android:textSize="18sp"
                 android:textStyle="bold"
-                android:textColor="#3B2F6E" />
+                android:textColor="#2563EB" />
 
             <Button
                 android:id="@+id/btn_start_audio"
@@ -142,7 +142,49 @@
                 android:text="▶️"
                 android:textSize="20sp"
                 android:textColor="#FFFFFF"
-                android:backgroundTint="#5B4FCF"
+                android:backgroundTint="#2563EB"
+                android:paddingLeft="16dp"
+                android:paddingRight="16dp"
+                android:paddingTop="8dp"
+                android:paddingBottom="8dp" />
+        </LinearLayout>
+    </androidx.cardview.widget.CardView>
+
+    <!-- My Progress Card -->
+    <androidx.cardview.widget.CardView
+        android:id="@+id/card_progress"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        app:cardCornerRadius="16dp"
+        app:cardElevation="2dp"
+        app:cardBackgroundColor="#FFFFFF"
+        android:foreground="?android:attr/selectableItemBackground">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:padding="20dp"
+            android:gravity="center_vertical">
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="📊 My Progress"
+                android:textSize="18sp"
+                android:textStyle="bold"
+                android:textColor="#2563EB" />
+
+            <Button
+                android:id="@+id/btn_progress"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="▶️"
+                android:textSize="20sp"
+                android:textColor="#FFFFFF"
+                android:backgroundTint="#2563EB"
                 android:paddingLeft="16dp"
                 android:paddingRight="16dp"
                 android:paddingTop="8dp"

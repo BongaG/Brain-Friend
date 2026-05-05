@@ -14,6 +14,7 @@ import androidx.recyclerview.widget.ItemTouchHelper;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import com.brainfriend.app.R;
+import com.brainfriend.app.utils.StatsManager;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -55,6 +56,10 @@ public class SequencingGameFragment extends Fragment {
     private int currentScenarioIndex = 0;
     private int totalScore = 0;
     private List<Scenario> scenarios;
+
+    // ---------- Stats tracking ----------
+    private StatsManager statsManager;
+    private boolean gameEndRecorded = false;
 
     // ---------- Adapter (inner class) ----------
     private class StepAdapter extends RecyclerView.Adapter<StepAdapter.ViewHolder> {
@@ -115,6 +120,8 @@ public class SequencingGameFragment extends Fragment {
         recyclerView = view.findViewById(R.id.rv_steps);
         recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
 
+        statsManager = new StatsManager(requireContext());
+
         setupScenarios();
         loadScenario(currentScenarioIndex);
 
@@ -127,10 +134,23 @@ public class SequencingGameFragment extends Fragment {
                 btnCheckOrder.setEnabled(true);
                 tvFeedback.setVisibility(View.GONE);
             } else {
+                // Game completed – all scenarios done
                 tvFeedback.setText("🎉 You completed all scenarios! Final score: " + totalScore);
                 tvFeedback.setVisibility(View.VISIBLE);
                 btnNextScenario.setEnabled(false);
                 btnCheckOrder.setEnabled(false);
+
+                // Record stats only once
+                if (!gameEndRecorded) {
+                    gameEndRecorded = true;
+                    statsManager.recordPlay();
+                    // Level = number of scenarios completed (max 5)
+                    int level = scenarios.size();
+                    // Score percentage = totalScore out of 100
+                    int percentage = totalScore;
+                    statsManager.setSequencingLevel(level);
+                    statsManager.setSequencingScore(percentage);
+                }
             }
         });
     }
@@ -190,7 +210,7 @@ public class SequencingGameFragment extends Fragment {
         scenarios.add(new Scenario("Studying for a Test", study));
     }
 
-    // ---------- Game logic (unchanged) ----------
+    // ---------- Game logic ----------
     private void loadScenario(int index) {
         Scenario scenario = scenarios.get(index);
         tvScenarioTitle.setText(scenario.title);
@@ -232,7 +252,7 @@ public class SequencingGameFragment extends Fragment {
             }
         }
         if (isCorrect) {
-            int pointsEarned = 100 / scenarios.size();
+            int pointsEarned = 100 / scenarios.size();  // each scenario worth 20 points (5 scenarios → 100 total)
             totalScore += pointsEarned;
             tvScore.setText("Score: " + totalScore);
             tvFeedback.setText("✅ Correct! Great sequencing!");

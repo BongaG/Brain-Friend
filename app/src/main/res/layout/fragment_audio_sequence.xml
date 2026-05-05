@@ -12,7 +12,7 @@
         android:text="🎧 Auditory Sequence Recall"
         android:textSize="24sp"
         android:textStyle="bold"
-        android:textColor="#3B2F6E"
+        android:textColor="#2563EB"
         android:layout_marginBottom="8dp" />
 
     <TextView
@@ -20,7 +20,7 @@
         android:layout_height="wrap_content"
         android:text="Listen to the sounds and repeat the order"
         android:textSize="14sp"
-        android:textColor="#6B63A0"
+        android:textColor="#2563EB"
         android:layout_marginBottom="24dp" />
 
     <TextView
@@ -30,7 +30,7 @@
         android:text="Round 1 - Length 3"
         android:textSize="16sp"
         android:textStyle="bold"
-        android:textColor="#5B4FCF"
+        android:textColor="#2563EB"
         android:layout_marginBottom="16dp" />
 
     <TextView
@@ -39,7 +39,7 @@
         android:layout_height="wrap_content"
         android:text="Score: 0"
         android:textSize="16sp"
-        android:textColor="#3B2F6E"
+        android:textColor="#2563EB"
         android:layout_marginBottom="24dp" />
 
     <!-- Buttons representing the three sounds -->
@@ -81,7 +81,7 @@
         android:layout_height="wrap_content"
         android:text="Press PLAY to hear the sequence"
         android:textSize="14sp"
-        android:textColor="#6B63A0"
+        android:textColor="#2563EB"
         android:layout_marginBottom="16dp"
         android:layout_gravity="center" />
 
@@ -90,7 +90,7 @@
         android:layout_width="match_parent"
         android:layout_height="56dp"
         android:text="Play Sequence"
-        android:backgroundTint="#5B4FCF"
+        android:backgroundTint="#2563EB"
         android:textColor="#FFFFFF"
         android:layout_marginBottom="16dp" />
 
@@ -99,7 +99,7 @@
         android:layout_width="match_parent"
         android:layout_height="56dp"
         android:text="New Game"
-        android:backgroundTint="#7B68EE"
+        android:backgroundTint="#2563EB"
         android:textColor="#FFFFFF"
         android:visibility="gone" />
 
@@ -108,7 +108,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:textSize="14sp"
-        android:textColor="#6B63A0"
+        android:textColor="#2563EB"
         android:layout_marginTop="16dp"
         android:visibility="gone"
         android:layout_gravity="center" />
