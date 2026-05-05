@@ -1,0 +1,237 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#F8F6FF">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="24dp">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="📊 My Progress"
+            android:textSize="28sp"
+            android:textStyle="bold"
+            android:textColor="#2563EB"
+            android:layout_marginBottom="8dp" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Your journey at a glance"
+            android:textSize="14sp"
+            android:textColor="#2563EB"
+            android:layout_marginBottom="32dp" />
+
+        <!-- Weekly streak + overall rate -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginBottom="24dp">
+
+            <TextView
+                android:id="@+id/tv_streak"
+                android:layout_width="0dp"
+                android:layout_weight="1"
+                android:layout_height="wrap_content"
+                android:text="🔥 7 day streak"
+                android:textSize="18sp"
+                android:textColor="#2563EB"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/tv_completion_rate"
+                android:layout_width="0dp"
+                android:layout_weight="1"
+                android:layout_height="wrap_content"
+                android:text="78% overall"
+                android:textSize="18sp"
+                android:textColor="#2563EB"
+                android:textStyle="bold"
+                android:gravity="end" />
+        </LinearLayout>
+
+        <!-- Performance list -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="📈 Game Performance"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            android:textColor="#2563EB"
+            android:layout_marginBottom="12dp" />
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:background="#DDDDDD"
+            android:layout_marginBottom="16dp" />
+
+        <!-- Step Sequencing -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginBottom="12dp">
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_weight="2"
+                android:layout_height="wrap_content"
+                android:text="📅 Step Sequencing"
+                android:textSize="16sp"
+                android:textColor="#2563EB" />
+
+            <TextView
+                android:id="@+id/tv_seq_level"
+                android:layout_width="0dp"
+                android:layout_weight="1"
+                android:layout_height="wrap_content"
+                android:text="Level 4"
+                android:textSize="14sp"
+                android:textColor="#2563EB" />
+
+            <TextView
+                android:id="@+id/tv_seq_score"
+                android:layout_width="0dp"
+                android:layout_weight="1"
+                android:layout_height="wrap_content"
+                android:text="82%"
+                android:textSize="14sp"
+                android:textColor="#2563EB"
+                android:textStyle="bold"
+                android:gravity="end" />
+        </LinearLayout>
+
+        <!-- Memory Match -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginBottom="12dp">
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_weight="2"
+                android:layout_height="wrap_content"
+                android:text="🃏 Memory Match"
+                android:textSize="16sp"
+                android:textColor="#2563EB" />
+
+            <TextView
+                android:id="@+id/tv_mem_level"
+                android:layout_width="0dp"
+                android:layout_weight="1"
+                android:layout_height="wrap_content"
+                android:text="Level 3"
+                android:textSize="14sp"
+                android:textColor="#2563EB" />
+
+            <TextView
+                android:id="@+id/tv_mem_score"
+                android:layout_width="0dp"
+                android:layout_weight="1"
+                android:layout_height="wrap_content"
+                android:text="91%"
+                android:textSize="14sp"
+                android:textColor="#2563EB"
+                android:textStyle="bold"
+                android:gravity="end" />
+        </LinearLayout>
+
+        <!-- Auditory Sequence -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="24dp">
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_weight="2"
+                android:layout_height="wrap_content"
+                android:text="🎧 Auditory Sequence"
+                android:textSize="16sp"
+                android:textColor="#2563EB" />
+
+            <TextView
+                android:id="@+id/tv_audio_level"
+                android:layout_width="0dp"
+                android:layout_weight="1"
+                android:layout_height="wrap_content"
+                android:text="Level 2"
+                android:textSize="14sp"
+                android:textColor="#2563EB" />
+
+            <TextView
+                android:id="@+id/tv_audio_score"
+                android:layout_width="0dp"
+                android:layout_weight="1"
+                android:layout_height="wrap_content"
+                android:text="75%"
+                android:textSize="14sp"
+                android:textColor="#2563EB"
+                android:textStyle="bold"
+                android:gravity="end" />
+        </LinearLayout>
+
+        <!-- AI Insights -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="🧠 AI Insights"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            android:textColor="#2563EB"
+            android:layout_marginBottom="12dp" />
+
+        <TextView
+            android:id="@+id/tv_best_time"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Best time: Evening"
+            android:textSize="14sp"
+            android:textColor="#2563EB"
+            android:layout_marginBottom="12dp" />
+
+        <!-- AI Coach Suggestion Card -->
+        <androidx.cardview.widget.CardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            app:cardCornerRadius="12dp"
+            app:cardElevation="2dp"
+            app:cardBackgroundColor="#FFFFFF"
+            android:layout_marginTop="8dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="16dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="💡 AI Coach Suggestion"
+                    android:textSize="16sp"
+                    android:textStyle="bold"
+                    android:textColor="#2563EB"
+                    android:layout_marginBottom="8dp" />
+
+                <TextView
+                    android:id="@+id/tv_coach_suggestion"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Try practicing Memory Match in the morning for better focus."
+                    android:textSize="14sp"
+                    android:textColor="#2563EB" />
+            </LinearLayout>
+        </androidx.cardview.widget.CardView>
+
+    </LinearLayout>
+</ScrollView>
