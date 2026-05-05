@@ -85,8 +85,24 @@ public class NotificationsAdapter extends RecyclerView.Adapter<NotificationsAdap
                             }
                             @Override
                             public void onError(String error) {
-                                new Handler(Looper.getMainLooper()).post(() ->
-                                        holder.tvAiLoading.setVisibility(View.GONE));
+                                AiInsightsHelper.callCognitivePrompt(
+                                        "Student completed task: \"" + item.getTaskTitle()
+                                                + "\". Write a 1 sentence celebration. 1 emoji.",
+                                        new AiInsightsHelper.AiCallback() {
+                                            @Override
+                                            public void onResult(String msg) {
+                                                new Handler(Looper.getMainLooper()).post(() -> {
+                                                    item.setAiMessage(msg);
+                                                    holder.tvBody.setText(msg);
+                                                    holder.tvAiLoading.setVisibility(View.GONE);
+                                                });
+                                            }
+                                            @Override
+                                            public void onError(String e) {
+                                                new Handler(Looper.getMainLooper()).post(() ->
+                                                        holder.tvAiLoading.setVisibility(View.GONE));
+                                            }
+                                        });
                             }
                         });
 
@@ -104,8 +120,25 @@ public class NotificationsAdapter extends RecyclerView.Adapter<NotificationsAdap
                             }
                             @Override
                             public void onError(String error) {
-                                new Handler(Looper.getMainLooper()).post(() ->
-                                        holder.tvAiLoading.setVisibility(View.GONE));
+                                AiInsightsHelper.callCognitivePrompt(
+                                        "Student missed task: \"" + item.getTaskTitle()
+                                                + "\". Write a 1 sentence urgent reminder to reschedule. "
+                                                + "1 emoji.",
+                                        new AiInsightsHelper.AiCallback() {
+                                            @Override
+                                            public void onResult(String msg) {
+                                                new Handler(Looper.getMainLooper()).post(() -> {
+                                                    item.setAiMessage(msg);
+                                                    holder.tvBody.setText(msg);
+                                                    holder.tvAiLoading.setVisibility(View.GONE);
+                                                });
+                                            }
+                                            @Override
+                                            public void onError(String e) {
+                                                new Handler(Looper.getMainLooper()).post(() ->
+                                                        holder.tvAiLoading.setVisibility(View.GONE));
+                                            }
+                                        });
                             }
                         });
             } else {

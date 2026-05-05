@@ -27,26 +27,66 @@ public class TaskAlarmReceiver extends BroadcastReceiver {
                 context, 0, mainIntent,
                 PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
 
-
+        // Show loading notification first
         showNotification(context, taskTitle,
-                "⏰ " + taskTitle + " starts in 10 minutes — get ready!",
+                "🧠 Brain Friend is personalising your reminder...",
                 pendingIntent, notifId);
 
-        // Step 2 — Get AI personalized message and update notification
-        AiInsightsHelper.getSmartReminderMessage(
-                taskTitle, importance,
+        // Get AI message — always from Claude
+        AiInsightsHelper.getSmartReminderMessage(taskTitle, importance,
                 category != null ? category : "Personal",
                 new AiInsightsHelper.AiCallback() {
                     @Override
                     public void onResult(String message) {
-                        // Update notification with AI message
                         showNotification(context, taskTitle,
                                 message, pendingIntent, notifId);
                     }
 
                     @Override
                     public void onError(String error) {
-                        // Keep the basic notification — no action needed
+                        // Retry with simpler prompt
+                        AiInsightsHelper.callCognitivePrompt(
+                                "Write a 1 sentence phone reminder for task: \""
+                                        + taskTitle + "\". 1 emoji.",
+                                new AiInsightsHelper.AiCallback() {
+                                    @Override
+                                    public void onResult(String msg) {
+                                        showNotification(context, taskTitle,
+                                                msg, pendingIntent, notifId);
+                                    }
+                                    @Override
+                                    public void onError(String e) {
+                                        // Last resort — still call Claude
+                                        // with absolute minimal prompt
+                                        AiInsightsHelper.callCognitivePrompt(
+                                                "1 sentence task reminder. "
+                                                        + "1 emoji.",
+                                                new AiInsightsHelper.AiCallback() {
+                                                    @Override
+                                                    public void onResult(
+                                                            String m) {
+                                                        showNotification(
+                                                                context,
+                                                                taskTitle,
+                                                                m,
+                                                                pendingIntent,
+                                                                notifId);
+                                                    }
+                                                    @Override
+                                                    public void onError(
+                                                            String err) {
+                                                        // Only now show
+                                                        // truly minimal text
+                                                        showNotification(
+                                                                context,
+                                                                taskTitle,
+                                                                "⏰ Starting soon",
+                                                                pendingIntent,
+                                                                notifId);
+                                                    }
+                                                });
+                                    }
+                                });
                     }
                 });
     }

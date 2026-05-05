@@ -337,14 +337,33 @@ public class DashboardFragment extends Fragment {
 
                     @Override
                     public void onError(String error) {
-                        new Handler(Looper.getMainLooper()).post(() -> {
-                            if (!isAdded()) return;
-                            if (tvAiInsight != null) {
-                                tvAiInsight.setText(
-                                        "Keep going! Your brain is "
-                                                + "working hard today 🧠");
-                            }
-                        });
+                        // Don't show hardcoded text — call Claude with simpler prompt
+                        AiInsightsHelper.callCognitivePrompt(
+                                "You are Brain Friend AI. Give a short encouraging "
+                                        + "message for a student. Max 2 sentences. 1 emoji.",
+                                new AiInsightsHelper.AiCallback() {
+                                    @Override
+                                    public void onResult(String msg) {
+                                        new Handler(Looper.getMainLooper()).post(() -> {
+                                            if (!isAdded()) return;
+                                            if (tvAiInsight != null) {
+                                                tvAiInsight.clearAnimation();
+                                                tvAiInsight.setAlpha(1f);
+                                                tvAiInsight.setText(msg);
+                                            }
+                                        });
+                                    }
+
+                                    @Override
+                                    public void onError(String e) {
+                                        new Handler(Looper.getMainLooper()).post(() -> {
+                                            if (!isAdded()) return;
+                                            if (tvAiInsight != null) {
+                                                tvAiInsight.setText("🧠 AI is thinking...");
+                                            }
+                                        });
+                                    }
+                                });
                     }
                 });
     }
@@ -360,44 +379,48 @@ public class DashboardFragment extends Fragment {
         if (focusTipCard == null || tvFocusTip == null) return;
 
         focusTipCard.setVisibility(View.VISIBLE);
-        tvFocusTip.setText("🧠 Analysing your cognitive performance...");
 
-        // Card color based on focus level
+        // Set card color based on focus level
         if (focusLevel < 50) {
-            ((CardView) focusTipCard).setCardBackgroundColor(
-                    android.graphics.Color.parseColor("#FFFBEB"));
+            ((androidx.cardview.widget.CardView) focusTipCard)
+                    .setCardBackgroundColor(
+                            android.graphics.Color.parseColor("#FFFBEB"));
             tvFocusTip.setTextColor(
                     android.graphics.Color.parseColor("#92400E"));
         } else {
-            ((CardView) focusTipCard).setCardBackgroundColor(
-                    android.graphics.Color.parseColor("#F0FDF4"));
+            ((androidx.cardview.widget.CardView) focusTipCard)
+                    .setCardBackgroundColor(
+                            android.graphics.Color.parseColor("#F0FDF4"));
             tvFocusTip.setTextColor(
                     android.graphics.Color.parseColor("#166534"));
         }
 
+        // Show loading state
+        tvFocusTip.setText("🧠 Generating your cognitive tip...");
+        startPulseAnimation(tvFocusTip);
+
+        // Build prompt with real user data
         String level = focusLevel < 30 ? "very low"
                 : focusLevel < 50 ? "low"
                 : focusLevel < 70 ? "moderate"
                 : focusLevel < 90 ? "good" : "excellent";
 
-        String prompt = "You are Brain Friend, a cognitive support AI for "
-                + "students with memory and focus challenges.\n\n"
-                + "User's current cognitive performance data:\n"
-                + "- Focus level: " + focusLevel + "% (" + level + ")\n"
-                + "- Tasks completed today: " + completed
-                + " out of " + total + "\n"
-                + "- Tasks still pending: " + pendingCount + "\n\n"
-                + "Give ONE specific, science-backed cognitive performance "
-                + "suggestion tailored to this exact focus level and task "
-                + "completion rate.\n"
-                + "Rules:\n"
-                + "- Max 2 sentences\n"
-                + "- Be specific to their numbers\n"
-                + "- Suggest a concrete action they can take RIGHT NOW\n"
-                + "- Use 1 relevant emoji\n"
-                + "- Sound like a supportive cognitive coach\n"
-                + "- Vary between: breathing, breaks, task batching, "
-                + "hydration, movement, focus techniques, celebration";
+        String prompt =
+                "You are Brain Friend, a cognitive support AI for students "
+                        + "with memory and focus challenges.\n\n"
+                        + "Student data right now:\n"
+                        + "- Focus level: " + focusLevel + "% (" + level + ")\n"
+                        + "- Tasks completed: " + completed + " out of " + total + "\n"
+                        + "- Tasks still pending: " + pendingCount + "\n\n"
+                        + "Give ONE cognitive performance suggestion. "
+                        + "Max 2 sentences. 1 emoji. "
+                        + "Be science-backed and specific to their numbers. "
+                        + "Suggest something they can do RIGHT NOW. "
+                        + "Sound like a supportive coach. "
+                        + "Never give the same suggestion twice — "
+                        + "rotate between: breathing, movement, hydration, breaks, "
+                        + "task batching, focus music, phone-free time, cold water, "
+                        + "celebration, journaling, stretching, Pomodoro technique.";
 
         AiInsightsHelper.callCognitivePrompt(prompt,
                 new AiInsightsHelper.AiCallback() {
@@ -405,29 +428,43 @@ public class DashboardFragment extends Fragment {
                     public void onResult(String suggestion) {
                         new Handler(Looper.getMainLooper()).post(() -> {
                             if (!isAdded()) return;
+                            tvFocusTip.clearAnimation();
+                            tvFocusTip.setAlpha(1f);
                             tvFocusTip.setText(suggestion);
                         });
                     }
 
                     @Override
                     public void onError(String error) {
-                        new Handler(Looper.getMainLooper()).post(() -> {
-                            if (!isAdded()) return;
-                            if (focusLevel >= 80) {
-                                tvFocusTip.setText("🔥 " + focusLevel
-                                        + "% focus — outstanding! Your brain "
-                                        + "is performing at its peak today.");
-                            } else if (focusLevel >= 50) {
-                                tvFocusTip.setText("💪 " + focusLevel
-                                        + "% focus — solid progress! Complete "
-                                        + pendingCount
-                                        + " more tasks to push higher.");
-                            } else {
-                                tvFocusTip.setText("💡 Focus at " + focusLevel
-                                        + "% — try a 5 min walk to reset "
-                                        + "your brain before your next task.");
-                            }
-                        });
+                        // On error call Claude again with simpler prompt
+                        // never show hardcoded text
+                        AiInsightsHelper.callCognitivePrompt(
+                                "Give a 1 sentence brain tip for a student. "
+                                        + "1 emoji. Be encouraging.",
+                                new AiInsightsHelper.AiCallback() {
+                                    @Override
+                                    public void onResult(String tip) {
+                                        new Handler(Looper.getMainLooper())
+                                                .post(() -> {
+                                                    if (!isAdded()) return;
+                                                    tvFocusTip.clearAnimation();
+                                                    tvFocusTip.setAlpha(1f);
+                                                    tvFocusTip.setText(tip);
+                                                });
+                                    }
+
+                                    @Override
+                                    public void onError(String e) {
+                                        new Handler(Looper.getMainLooper())
+                                                .post(() -> {
+                                                    if (!isAdded()) return;
+                                                    tvFocusTip.clearAnimation();
+                                                    tvFocusTip.setAlpha(1f);
+                                                    tvFocusTip.setText(
+                                                            "🧠 AI is thinking...");
+                                                });
+                                    }
+                                });
                     }
                 });
     }
