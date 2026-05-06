@@ -22,19 +22,17 @@ public class AiInsightsHelper {
         void onError(String error);
     }
 
-    private static final String API_URL = "https://api.anthropic.com/v1/messages";
-    private static final String MODEL = "claude-sonnet-4-20250514";
+    private static final String API_URL =
+            "https://api.anthropic.com/v1/messages";
+    private static final String MODEL = "claude-haiku-4-5-20251001";
 
-    // ─── 1. Home Insight ───
-    public static void getHomeInsight(List<Task> allTasks, AiCallback callback) {
+    public static void getHomeInsight(List<Task> allTasks,
+                                      AiCallback callback) {
         new Thread(() -> {
             try {
                 int total = allTasks.size();
-                int completed = 0;
-                int overdue = 0;
-                int highPending = 0;
-                int medPending = 0;
-                int lowPending = 0;
+                int completed = 0, overdue = 0;
+                int highPending = 0, medPending = 0, lowPending = 0;
                 StringBuilder overdueNames = new StringBuilder();
                 StringBuilder upcomingNames = new StringBuilder();
                 Date now = new Date();
@@ -43,14 +41,15 @@ public class AiInsightsHelper {
                 for (Task t : allTasks) {
                     if (t.isCompleted()) {
                         completed++;
-                        hourCounts[t.getDueHour()]++;
+                        if (t.getDueHour() >= 0 && t.getDueHour() < 24)
+                            hourCounts[t.getDueHour()]++;
                     } else if (t.getDueDate() != null
                             && t.getDueDate().before(now)) {
                         overdue++;
                         if (overdueNames.length() > 0)
                             overdueNames.append(", ");
-                        overdueNames.append("\"").append(t.getTitle())
-                                .append("\"");
+                        overdueNames.append("\"")
+                                .append(t.getTitle()).append("\"");
                     } else {
                         if (t.getImportance() == 3) highPending++;
                         else if (t.getImportance() == 2) medPending++;
@@ -64,8 +63,7 @@ public class AiInsightsHelper {
                     }
                 }
 
-                int peakHour = 0;
-                int peakCount = 0;
+                int peakHour = 0, peakCount = 0;
                 for (int i = 0; i < 24; i++) {
                     if (hourCounts[i] > peakCount) {
                         peakCount = hourCounts[i];
@@ -78,74 +76,57 @@ public class AiInsightsHelper {
                 String today = new SimpleDateFormat(
                         "EEEE", Locale.getDefault()).format(now);
 
-                String prompt =
-                        "You are Brain Friend, an AI cognitive support assistant "
-                                + "for students with memory and focus challenges.\n\n"
-                                + "TODAY: " + today + "\n"
-                                + "TOTAL TASKS: " + total + "\n"
-                                + "COMPLETED: " + completed
-                                + " (Focus: " + focusLevel + "%)\n"
-                                + "OVERDUE (" + overdue + "): "
-                                + (overdue > 0 ? overdueNames : "None") + "\n"
-                                + "HIGH PRIORITY PENDING: " + highPending + "\n"
-                                + "MEDIUM PRIORITY PENDING: " + medPending + "\n"
-                                + "LOW PRIORITY PENDING: " + lowPending + "\n"
-                                + "UPCOMING: " + (upcomingNames.length() > 0
-                                ? upcomingNames : "None") + "\n"
-                                + (peakCount > 0 ? "PEAK HOUR: " + peakHour
-                                + ":00\n" : "")
-                                + "\nWrite a short, personal, motivating insight "
-                                + "for this student.\n"
-                                + "Include:\n"
-                                + "1. What to focus on RIGHT NOW\n"
-                                + "2. A cognitive performance suggestion\n"
-                                + "3. "
-                                + (overdue > 0
-                                ? "Urgent alert about overdue tasks by name"
-                                : "Positive reinforcement")
-                                + "\nRules: max 3 sentences, use 1-2 emojis, "
-                                + "mention specific task names, sound like a "
-                                + "caring friend not a robot, be different every time.";
+                String prompt = "You are Brain Friend, an AI cognitive "
+                        + "support assistant for students.\n"
+                        + "TODAY: " + today + "\n"
+                        + "TOTAL TASKS: " + total + "\n"
+                        + "COMPLETED: " + completed
+                        + " (Focus: " + focusLevel + "%)\n"
+                        + "OVERDUE (" + overdue + "): "
+                        + (overdue > 0 ? overdueNames : "None") + "\n"
+                        + "HIGH PENDING: " + highPending + "\n"
+                        + "MEDIUM PENDING: " + medPending + "\n"
+                        + "LOW PENDING: " + lowPending + "\n"
+                        + "UPCOMING: "
+                        + (upcomingNames.length() > 0
+                        ? upcomingNames : "None") + "\n"
+                        + (peakCount > 0
+                        ? "PEAK HOUR: " + peakHour + ":00\n" : "")
+                        + "\nWrite a short personal motivating insight. "
+                        + "Max 3 sentences. 1-2 emojis. "
+                        + "Mention task names. Sound like a caring friend. "
+                        + (overdue > 0
+                        ? "Alert urgently about overdue tasks."
+                        : "Give positive reinforcement.");
 
                 callClaude(prompt, callback);
-
             } catch (Exception e) {
-                callClaude(
-                        "You are Brain Friend AI. Give a short encouraging "
-                                + "cognitive support message for a student. "
-                                + "Max 2 sentences. Use 1 emoji.",
-                        callback);
+                Log.e("AI", "getHomeInsight error: " + e.getMessage());
+                callback.onError(e.getMessage());
             }
         }).start();
     }
 
-    // ─── 2. Cognitive Performance Suggestion ───
     public static void callCognitivePrompt(String prompt,
                                            AiCallback callback) {
         new Thread(() -> callClaude(prompt, callback)).start();
     }
 
-    // ─── 3. Focus Tip ───
     public static void getFocusTip(int focusLevel, int pendingCount,
                                    AiCallback callback) {
         new Thread(() -> {
-            String prompt =
-                    "You are Brain Friend, a cognitive support AI for "
-                            + "students with memory and focus challenges.\n"
-                            + "Student focus level: " + focusLevel + "%\n"
-                            + "Pending tasks: " + pendingCount + "\n\n"
-                            + "Give ONE specific, science-backed cognitive tip. "
-                            + "Max 2 sentences. 1 emoji. "
-                            + "Be concrete and actionable RIGHT NOW. "
-                            + "Never repeat the same tip twice — vary between: "
-                            + "breathing exercises, hydration, movement, Pomodoro, "
-                            + "task batching, music, cold water, phone-free zones, "
-                            + "power nap, journaling, stretching.";
+            String prompt = "You are Brain Friend cognitive AI.\n"
+                    + "Student focus: " + focusLevel + "%\n"
+                    + "Pending tasks: " + pendingCount + "\n"
+                    + "Give ONE science-backed tip. Max 2 sentences. "
+                    + "1 emoji. Actionable RIGHT NOW. "
+                    + "Vary between: breathing, hydration, movement, "
+                    + "Pomodoro, task batching, music, cold water, "
+                    + "phone-free zone, power nap, journaling, stretching.";
             callClaude(prompt, callback);
         }).start();
     }
 
-    // ─── 4. Weekly Report ───
     public static void getWeeklyReport(int completedLastWeek,
                                        int totalLastWeek,
                                        int missedLastWeek,
@@ -157,120 +138,87 @@ public class AiInsightsHelper {
                     ? (completedLastWeek * 100 / totalLastWeek) : 0;
             String missed = missedTitles.isEmpty()
                     ? "None" : String.join(", ", missedTitles);
-
-            String prompt =
-                    "You are Brain Friend AI giving a weekly brain report.\n"
-                            + "Last week:\n"
-                            + "- Completed: " + completedLastWeek + "/"
-                            + totalLastWeek + " (" + pct + "%)\n"
-                            + "- Best day: " + bestDay + "\n"
-                            + "- Missed tasks: " + missed + "\n\n"
-                            + "Write a personal weekly summary. Max 3 sentences. "
-                            + "Mention the percentage, best day, and one specific "
-                            + "goal for this week. Use 1-2 emojis. "
-                            + "Be motivating and specific.";
+            String prompt = "You are Brain Friend AI weekly reporter.\n"
+                    + "Completed: " + completedLastWeek + "/"
+                    + totalLastWeek + " (" + pct + "%)\n"
+                    + "Best day: " + bestDay + "\n"
+                    + "Missed: " + missed + "\n"
+                    + "Write a personal weekly summary. Max 3 sentences. "
+                    + "1-2 emojis. Motivating and specific.";
             callClaude(prompt, callback);
         }).start();
     }
 
-    // ─── 5. Smart Reminder Message ───
     public static void getSmartReminderMessage(String taskTitle,
                                                int importance,
                                                String category,
                                                AiCallback callback) {
         new Thread(() -> {
             String priority = importance == 3 ? "HIGH priority"
-                    : importance == 2 ? "medium priority"
-                    : "low priority";
-            String tone = importance == 3
-                    ? "urgent and energetic"
+                    : importance == 2 ? "medium priority" : "low priority";
+            String tone = importance == 3 ? "urgent and energetic"
                     : importance == 2 ? "calm and encouraging"
                     : "relaxed and friendly";
-
-            String prompt =
-                    "Write a short phone notification for a task starting "
-                            + "in 10 minutes.\n"
-                            + "Task: \"" + taskTitle + "\"\n"
-                            + "Priority: " + priority + "\n"
-                            + "Category: " + category + "\n"
-                            + "Tone: " + tone + "\n"
-                            + "Rules: max 1 sentence, 1 emoji, personal not robotic, "
-                            + "do not start with Hey, be different every time.";
+            String prompt = "Write a phone notification for a task "
+                    + "starting in 10 minutes.\n"
+                    + "Task: \"" + taskTitle + "\"\n"
+                    + "Priority: " + priority + "\n"
+                    + "Category: " + category + "\n"
+                    + "Tone: " + tone + "\n"
+                    + "Max 1 sentence. 1 emoji. Personal. "
+                    + "Do not start with Hey. Be unique each time.";
             callClaude(prompt, callback);
         }).start();
     }
 
-    // ─── 6. Completion Message ───
     public static void getCompletionMessage(String taskTitle,
                                             int importance,
                                             String category,
                                             AiCallback callback) {
         new Thread(() -> {
-            String priority = importance == 3 ? "high priority"
-                    : importance == 2 ? "medium priority"
-                    : "low priority";
-
-            String prompt =
-                    "You are Brain Friend AI. The student just completed "
-                            + "a task.\n"
-                            + "Task: \"" + taskTitle + "\"\n"
-                            + "Priority: " + priority + "\n"
-                            + "Category: " + category + "\n\n"
-                            + "Write a SHORT celebration message. Max 2 sentences. "
-                            + "1 emoji. Mention the task name. Sound like a proud "
-                            + "friend. Be genuine and specific. "
-                            + "Be different every time — vary your tone and words.";
+            String prompt = "Brain Friend AI: student completed task.\n"
+                    + "Task: \"" + taskTitle + "\"\n"
+                    + "Priority: " + (importance == 3 ? "high"
+                    : importance == 2 ? "medium" : "low") + "\n"
+                    + "Category: " + category + "\n"
+                    + "Write SHORT celebration. Max 2 sentences. 1 emoji. "
+                    + "Mention task name. Sound proud. Be unique.";
             callClaude(prompt, callback);
         }).start();
     }
 
-    // ─── 7. Missed Task Message ───
     public static void getMissedTaskMessage(String taskTitle,
                                             int importance,
                                             String category,
                                             AiCallback callback) {
         new Thread(() -> {
-            String urgency = importance == 3
-                    ? "URGENT — this was HIGH priority"
-                    : importance == 2 ? "medium priority"
-                    : "low priority";
-
-            String prompt =
-                    "You are Brain Friend AI. The student missed a task.\n"
-                            + "Task: \"" + taskTitle + "\"\n"
-                            + "Priority: " + urgency + "\n"
-                            + "Category: " + category + "\n\n"
-                            + "Write a SHORT motivating alert. Max 2 sentences. "
-                            + "1 emoji. Mention the task name. Acknowledge the miss "
-                            + "without being harsh. Push them to reschedule NOW. "
-                            + "Be specific to the task. "
-                            + "Be different every time — never repeat the same message.";
+            String urgency = importance == 3 ? "URGENT HIGH priority"
+                    : importance == 2 ? "medium priority" : "low priority";
+            String prompt = "Brain Friend AI: student missed a task.\n"
+                    + "Task: \"" + taskTitle + "\"\n"
+                    + "Priority: " + urgency + "\n"
+                    + "Category: " + category + "\n"
+                    + "Write SHORT motivating alert. Max 2 sentences. "
+                    + "1 emoji. Mention task name. Not harsh. "
+                    + "Push to reschedule. Be unique each time.";
             callClaude(prompt, callback);
         }).start();
     }
 
-    // ─── 8. Task Suggestion (Tasks page) ───
-    public static void getTaskSuggestion(int totalPending,
-                                         int highCount,
-                                         int workCount,
-                                         int schoolCount,
+    public static void getTaskSuggestion(int totalPending, int highCount,
+                                         int workCount, int schoolCount,
                                          AiCallback callback) {
         new Thread(() -> {
-            String prompt =
-                    "You are Brain Friend AI. The student has free time "
-                            + "today with no tasks due.\n"
-                            + "Pending tasks: " + totalPending + " total, "
-                            + highCount + " high priority, "
-                            + workCount + " work, "
-                            + schoolCount + " school.\n\n"
-                            + "Give ONE proactive suggestion. Max 2 sentences. "
-                            + "1 emoji. Be specific about what to tackle. "
-                            + "Be different every time.";
+            String prompt = "Brain Friend AI: student has free time.\n"
+                    + "Pending: " + totalPending + " tasks, "
+                    + highCount + " high priority, "
+                    + workCount + " work, " + schoolCount + " school.\n"
+                    + "Give ONE proactive suggestion. Max 2 sentences. "
+                    + "1 emoji. Specific. Unique each time.";
             callClaude(prompt, callback);
         }).start();
     }
 
-    // ─── Core Claude API caller ───
     static void callClaude(String prompt, AiCallback callback) {
         try {
             URL url = new URL(API_URL);
@@ -282,55 +230,59 @@ public class AiInsightsHelper {
                     BuildConfig.ANTHROPIC_API_KEY);
             conn.setRequestProperty("anthropic-version", "2023-06-01");
             conn.setDoOutput(true);
-            conn.setConnectTimeout(15000);
-            conn.setReadTimeout(15000);
+            conn.setConnectTimeout(30000);
+            conn.setReadTimeout(30000);
 
             JSONObject body = new JSONObject();
             body.put("model", MODEL);
-            body.put("max_tokens", 300);
+            body.put("max_tokens", 150);
 
             JSONArray messages = new JSONArray();
-            JSONObject message = new JSONObject();
-            message.put("role", "user");
-            message.put("content", prompt);
-            messages.put(message);
+            JSONObject msg = new JSONObject();
+            msg.put("role", "user");
+            msg.put("content", prompt);
+            messages.put(msg);
             body.put("messages", messages);
 
             OutputStream os = conn.getOutputStream();
-            os.write(body.toString().getBytes());
+            os.write(body.toString().getBytes("UTF-8"));
             os.close();
 
-            int responseCode = conn.getResponseCode();
+            int code = conn.getResponseCode();
+            Log.d("AI", "Response code: " + code);
+
             BufferedReader br;
-            if (responseCode == 200) {
+            if (code == 200) {
                 br = new BufferedReader(
                         new InputStreamReader(conn.getInputStream()));
             } else {
                 br = new BufferedReader(
                         new InputStreamReader(conn.getErrorStream()));
+                StringBuilder errBody = new StringBuilder();
+                String errLine;
+                while ((errLine = br.readLine()) != null)
+                    errBody.append(errLine);
+                Log.e("AI", "Error body: " + errBody);
+                callback.onError("API error " + code);
+                return;
             }
 
             StringBuilder response = new StringBuilder();
             String line;
-            while ((line = br.readLine()) != null) {
+            while ((line = br.readLine()) != null)
                 response.append(line);
-            }
             br.close();
 
-            JSONObject jsonResponse =
-                    new JSONObject(response.toString());
-            String result = jsonResponse
-                    .getJSONArray("content")
+            JSONObject json = new JSONObject(response.toString());
+            String result = json.getJSONArray("content")
                     .getJSONObject(0)
                     .getString("text");
 
-            callback.onResult(result);
+            callback.onResult(result.trim());
 
         } catch (Exception e) {
-            Log.e("AiInsightsHelper", "API error: " + e.getMessage());
-            // Even fallback calls Claude with a simple prompt
-            // so it is never hardcoded
-            callback.onError("AI unavailable");
+            Log.e("AI", "callClaude exception: " + e.getMessage());
+            callback.onError(e.getMessage());
         }
     }
 }

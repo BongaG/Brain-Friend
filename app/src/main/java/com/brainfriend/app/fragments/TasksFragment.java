@@ -42,6 +42,7 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
 import java.util.Locale;
+import android.widget.ImageView;
 
 public class TasksFragment extends Fragment implements TasksAdapter.OnTaskClickListener {
 
@@ -241,7 +242,9 @@ public class TasksFragment extends Fragment implements TasksAdapter.OnTaskClickL
             Toast.makeText(getContext(), "Error opening dialog",
                     Toast.LENGTH_SHORT).show();
             return;
+
         }
+
 
         dateSelected = false;
         timeSelected = false;
@@ -255,6 +258,11 @@ public class TasksFragment extends Fragment implements TasksAdapter.OnTaskClickL
         AlertDialog dialog = new AlertDialog.Builder(requireContext())
                 .setView(dv)
                 .create();
+
+        ImageView btnClose = dv.findViewById(R.id.btn_close_dialog);
+        if (btnClose != null) {
+            btnClose.setOnClickListener(v -> dialog.dismiss());
+        }
 
         TextInputEditText etTitle = dv.findViewById(R.id.et_task_title);
         TextInputEditText etDetails = dv.findViewById(R.id.et_task_details);
@@ -374,6 +382,8 @@ public class TasksFragment extends Fragment implements TasksAdapter.OnTaskClickL
         }
 
         dialog.show();
+
+
     }
 
     // ✅ Correct 5-parameter version
