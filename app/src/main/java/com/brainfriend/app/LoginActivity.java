@@ -11,6 +11,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.app.AppCompatDelegate;
 import com.google.android.material.textfield.TextInputEditText;
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.firestore.FirebaseFirestore;
 
 public class LoginActivity extends AppCompatActivity {
 
@@ -52,9 +53,7 @@ public class LoginActivity extends AppCompatActivity {
             mAuth.signInWithEmailAndPassword(email, pass)
                     .addOnCompleteListener(task -> {
                         if (task.isSuccessful()) {
-                            startActivity(new Intent(
-                                    LoginActivity.this, MainActivity.class));
-                            finish();
+                            checkIfSurveyNeeded(); // ← just the call, nothing else
                         } else {
                             Toast.makeText(this,
                                     "Login failed. Check your credentials.",
@@ -71,8 +70,32 @@ public class LoginActivity extends AppCompatActivity {
         tvForgot.setOnClickListener(v -> showForgotPasswordDialog());
     }
 
+    // ── Survey check ────────────────────────────────────────────────────────
+    private void checkIfSurveyNeeded() {
+        String userId = FirebaseAuth.getInstance().getCurrentUser().getUid();
+        FirebaseFirestore.getInstance()
+                .collection("userPreferences")
+                .document(userId)
+                .get()
+                .addOnSuccessListener(doc -> {
+                    boolean surveyDone = doc.exists()
+                            && Boolean.TRUE.equals(doc.getBoolean("surveyDone"));
+                    if (surveyDone) {
+                        startActivity(new Intent(this, MainActivity.class));
+                    } else {
+                        startActivity(new Intent(this, SurveyActivity.class));
+                    }
+                    finish();
+                })
+                .addOnFailureListener(e -> {
+                    // If Firestore fails, go to main app anyway
+                    startActivity(new Intent(this, MainActivity.class));
+                    finish();
+                });
+    }
+
+    // ── Forgot password ─────────────────────────────────────────────────────
     private void showForgotPasswordDialog() {
-        // Input field for email
         TextInputEditText etResetEmail = new TextInputEditText(this);
         etResetEmail.setHint("Enter your email address");
         etResetEmail.setInputType(
@@ -103,7 +126,6 @@ public class LoginActivity extends AppCompatActivity {
                         return;
                     }
 
-                    // Send reset email via Firebase
                     mAuth.sendPasswordResetEmail(email)
                             .addOnSuccessListener(a -> {
                                 new AlertDialog.Builder(this)
