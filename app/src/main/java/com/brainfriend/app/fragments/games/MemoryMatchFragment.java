@@ -6,13 +6,11 @@ import android.speech.tts.TextToSpeech;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
 import android.widget.Button;
-import android.widget.Spinner;
 import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.appcompat.app.AlertDialog;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -28,7 +26,6 @@ public class MemoryMatchFragment extends Fragment implements TextToSpeech.OnInit
     private RecyclerView recyclerView;
     private TextView tvScore, tvAttempts, tvTimer, tvFeedback;
     private Button btnReset;
-    private Spinner spinnerDifficulty;
     private MemoryAdapter adapter;
     private List<Card> cards;
     private int matchesFound = 0;
@@ -41,15 +38,19 @@ public class MemoryMatchFragment extends Fragment implements TextToSpeech.OnInit
 
     // Timer
     private int timeRemaining = 90; // seconds
+    private int initialTime = 90;
     private Handler timerHandler = new Handler();
     private Runnable timerRunnable;
 
+    // Difficulty (0=Easy,1=Medium,2=Hard)
+    private int currentDifficulty = 0;
+
     // Audio
     private TextToSpeech tts;
-    private final String[] emojiNames = {"📘", "🎒", "⏰", "🍎", "✏️", "📏"}; // up to 6 pairs
+    private final String[] emojiNames = {"📘", "🎒", "⏰", "🍎", "✏️", "📏"};
     private final String[] spokenWords = {"book", "backpack", "clock", "apple", "pencil", "ruler"};
 
-    // Stats tracking
+    // Stats
     private StatsManager statsManager;
     private boolean gameEndRecorded = false;
 
@@ -69,33 +70,25 @@ public class MemoryMatchFragment extends Fragment implements TextToSpeech.OnInit
         tvTimer = view.findViewById(R.id.tv_timer);
         tvFeedback = view.findViewById(R.id.tv_feedback_memory);
         btnReset = view.findViewById(R.id.btn_reset_memory);
-        spinnerDifficulty = view.findViewById(R.id.spinner_difficulty_memory);
 
         tts = new TextToSpeech(getContext(), this);
         statsManager = new StatsManager(requireContext());
 
-        ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(getContext(),
-                R.array.memory_difficulty_levels, android.R.layout.simple_spinner_item);
-        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        spinnerDifficulty.setAdapter(adapter);
-        spinnerDifficulty.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-            @Override
-            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-                applyDifficulty(position);
-                resetGame();
-            }
-            @Override
-            public void onNothingSelected(AdapterView<?> parent) {}
-        });
+        // Get difficulty from arguments
+        if (getArguments() != null) {
+            currentDifficulty = getArguments().getInt("difficulty", 0);
+        } else {
+            currentDifficulty = 0; // default Easy
+        }
+        applyDifficulty(currentDifficulty);
 
         btnReset.setOnClickListener(v -> resetGame());
 
-        applyDifficulty(0); // default Easy
-        resetGame();
+        setupGame();
     }
 
-    private void applyDifficulty(int position) {
-        switch (position) {
+    private void applyDifficulty(int difficulty) {
+        switch (difficulty) {
             case 0: // Easy
                 totalPairs = 4;
                 timeRemaining = 90;
@@ -109,7 +102,8 @@ public class MemoryMatchFragment extends Fragment implements TextToSpeech.OnInit
                 timeRemaining = 60;
                 break;
         }
-        int columns = 2; // keep 2 columns for all difficulties, rows = totalPairs
+        initialTime = timeRemaining;
+        int columns = 2;
         recyclerView.setLayoutManager(new GridLayoutManager(getContext(), columns));
         tvTimer.setText("Time: " + timeRemaining + "s");
     }
@@ -122,7 +116,6 @@ public class MemoryMatchFragment extends Fragment implements TextToSpeech.OnInit
     }
 
     private void setupGame() {
-        // Use emojis and spoken words for the number of pairs
         List<EmojiPair> emojiPairs = new ArrayList<>();
         for (int i = 0; i < totalPairs; i++) {
             emojiPairs.add(new EmojiPair(emojiNames[i], spokenWords[i]));
@@ -141,10 +134,9 @@ public class MemoryMatchFragment extends Fragment implements TextToSpeech.OnInit
         secondPosition = -1;
         isWaiting = false;
         gameActive = true;
-        gameEndRecorded = false;   // reset flag
+        gameEndRecorded = false;
         updateUI();
 
-        // Start timer
         stopTimer();
         startTimer();
     }
@@ -160,10 +152,9 @@ public class MemoryMatchFragment extends Fragment implements TextToSpeech.OnInit
                     timerHandler.postDelayed(this, 1000);
                     if (timeRemaining == 0) {
                         gameActive = false;
-                        tvFeedback.setText("⏰ Time's up! Game over.");
+                        tvFeedback.setText("⏰ TIME'S UP! GAME OVER.");
                         tvFeedback.setVisibility(View.VISIBLE);
                         btnReset.setVisibility(View.VISIBLE);
-                        // Record stats for timeout (percentage based on matched pairs)
                         if (!gameEndRecorded) {
                             gameEndRecorded = true;
                             recordStats();
@@ -185,7 +176,7 @@ public class MemoryMatchFragment extends Fragment implements TextToSpeech.OnInit
 
     private void resetGame() {
         stopTimer();
-        applyDifficulty(spinnerDifficulty.getSelectedItemPosition());
+        applyDifficulty(currentDifficulty);
         setupGame();
         tvFeedback.setVisibility(View.GONE);
         btnReset.setVisibility(View.GONE);
@@ -200,7 +191,28 @@ public class MemoryMatchFragment extends Fragment implements TextToSpeech.OnInit
             tvFeedback.setText("🎉 You won! Great memory!");
             tvFeedback.setVisibility(View.VISIBLE);
             btnReset.setVisibility(View.VISIBLE);
-            // Record stats for win
+
+            // Check if time remaining is >= 70% of initial time
+            int timePercentRemaining = (timeRemaining * 100) / initialTime;
+            if (timePercentRemaining >= 70 && currentDifficulty < 2) {
+                new AlertDialog.Builder(requireContext())
+                        .setTitle("🎉 Great job!")
+                        .setMessage("You finished with plenty of time! Would you like to try the next difficulty?")
+                        .setPositiveButton("Yes, upgrade", (dialog, which) -> {
+                            int nextDifficulty = currentDifficulty + 1;
+                            Bundle args = new Bundle();
+                            args.putInt("difficulty", nextDifficulty);
+                            MemoryMatchFragment nextGame = new MemoryMatchFragment();
+                            nextGame.setArguments(args);
+                            requireActivity().getSupportFragmentManager()
+                                    .beginTransaction()
+                                    .replace(R.id.fragment_container, nextGame)
+                                    .commit();
+                        })
+                        .setNegativeButton("No, stay here", null)
+                        .show();
+            }
+
             if (!gameEndRecorded) {
                 gameEndRecorded = true;
                 recordStats();
@@ -210,10 +222,9 @@ public class MemoryMatchFragment extends Fragment implements TextToSpeech.OnInit
 
     private void recordStats() {
         statsManager.recordPlay();
-        int level = spinnerDifficulty.getSelectedItemPosition() + 1; // 1=Easy,2=Medium,3=Hard
+        int level = currentDifficulty + 1; // 1=Easy,2=Medium,3=Hard
         int percentage = (matchesFound * 100) / totalPairs;
         android.util.Log.d("MemoryMatch", "Recording stats - level: " + level + ", score: " + percentage);
-        statsManager.recordPlay();
         statsManager.setMemoryLevel(level);
         statsManager.setMemoryScore(percentage);
     }
@@ -223,14 +234,11 @@ public class MemoryMatchFragment extends Fragment implements TextToSpeech.OnInit
         Card card = cards.get(position);
         if (card.isMatched) return;
         if (firstPosition == -1) {
-            // Flip first card
             firstPosition = position;
             card.isFlipped = true;
             adapter.notifyItemChanged(firstPosition);
-            // Speak the emoji name
             speak(card.spokenWord);
         } else if (secondPosition == -1 && position != firstPosition) {
-            // Flip second card
             secondPosition = position;
             card.isFlipped = true;
             adapter.notifyItemChanged(secondPosition);
@@ -241,16 +249,13 @@ public class MemoryMatchFragment extends Fragment implements TextToSpeech.OnInit
             Card card1 = cards.get(firstPosition);
             Card card2 = cards.get(secondPosition);
             if (card1.emoji.equals(card2.emoji)) {
-                // Match
                 card1.isMatched = true;
                 card2.isMatched = true;
                 matchesFound++;
                 updateUI();
                 firstPosition = -1;
                 secondPosition = -1;
-                // Keep flipped
             } else {
-                // No match – flip back after delay
                 isWaiting = true;
                 new Handler().postDelayed(() -> {
                     if (!card1.isMatched) card1.isFlipped = false;
@@ -271,7 +276,6 @@ public class MemoryMatchFragment extends Fragment implements TextToSpeech.OnInit
         }
     }
 
-    // Helper class for emoji + spoken word
     private static class EmojiPair {
         String emoji;
         String spokenWord;
@@ -289,7 +293,6 @@ public class MemoryMatchFragment extends Fragment implements TextToSpeech.OnInit
         int pairId;
         boolean isFlipped = false;
         boolean isMatched = false;
-
         Card(String emoji, String spokenWord, int pairId) {
             this.emoji = emoji;
             this.spokenWord = spokenWord;
@@ -299,20 +302,12 @@ public class MemoryMatchFragment extends Fragment implements TextToSpeech.OnInit
 
     private class MemoryAdapter extends RecyclerView.Adapter<MemoryAdapter.ViewHolder> {
         private List<Card> cards;
-
-        MemoryAdapter(List<Card> cards) {
-            this.cards = cards;
-        }
-
-        @NonNull
-        @Override
-        public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+        MemoryAdapter(List<Card> cards) { this.cards = cards; }
+        @NonNull @Override public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
             View v = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_memory_card, parent, false);
             return new ViewHolder(v);
         }
-
-        @Override
-        public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
+        @Override public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
             Card card = cards.get(position);
             if (card.isFlipped || card.isMatched) {
                 holder.tvFront.setText(card.emoji);
@@ -324,12 +319,7 @@ public class MemoryMatchFragment extends Fragment implements TextToSpeech.OnInit
             }
             holder.itemView.setOnClickListener(v -> onCardClick(position));
         }
-
-        @Override
-        public int getItemCount() {
-            return cards.size();
-        }
-
+        @Override public int getItemCount() { return cards.size(); }
         class ViewHolder extends RecyclerView.ViewHolder {
             TextView tvFront, tvBack;
             ViewHolder(View itemView) {

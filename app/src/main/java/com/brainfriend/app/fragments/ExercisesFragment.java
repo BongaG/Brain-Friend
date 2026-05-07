@@ -10,8 +10,8 @@ import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import com.brainfriend.app.R;
 import com.brainfriend.app.fragments.games.AudioSequenceFragment;
+import com.brainfriend.app.fragments.games.MemoryMatchDifficultyFragment;
 import com.brainfriend.app.fragments.games.SequencingGameFragment;
-import com.brainfriend.app.fragments.games.MemoryMatchFragment;   // add this import
 
 public class ExercisesFragment extends Fragment {
 
@@ -25,9 +25,9 @@ public class ExercisesFragment extends Fragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
-        // Sequencing Game button
-        Button btnStart = view.findViewById(R.id.btn_start_sequencing);
-        btnStart.setOnClickListener(v -> {
+        // Step Sequencing
+        Button btnSequencing = view.findViewById(R.id.btn_start_sequencing);
+        btnSequencing.setOnClickListener(v -> {
             requireActivity().getSupportFragmentManager()
                     .beginTransaction()
                     .replace(R.id.fragment_container, new SequencingGameFragment())
@@ -35,16 +35,17 @@ public class ExercisesFragment extends Fragment {
                     .commit();
         });
 
-        // Memory Match button
+        // Memory Match (opens difficulty screen)
         Button btnMemory = view.findViewById(R.id.btn_start_memory);
         btnMemory.setOnClickListener(v -> {
             requireActivity().getSupportFragmentManager()
                     .beginTransaction()
-                    .replace(R.id.fragment_container, new MemoryMatchFragment())
+                    .replace(R.id.fragment_container, new MemoryMatchDifficultyFragment())
                     .addToBackStack(null)
                     .commit();
         });
 
+        // Auditory Sequence
         Button btnAudio = view.findViewById(R.id.btn_start_audio);
         btnAudio.setOnClickListener(v -> {
             requireActivity().getSupportFragmentManager()
@@ -54,6 +55,7 @@ public class ExercisesFragment extends Fragment {
                     .commit();
         });
 
+        // My Progress
         Button btnProgress = view.findViewById(R.id.btn_progress);
         btnProgress.setOnClickListener(v -> {
             requireActivity().getSupportFragmentManager()
