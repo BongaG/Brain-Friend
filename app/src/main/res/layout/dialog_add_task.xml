@@ -11,33 +11,14 @@
         android:orientation="vertical"
         android:padding="24dp">
 
-        <!-- Header with close button -->
-        <LinearLayout
-            android:layout_width="match_parent"
+        <TextView
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:gravity="center_vertical"
-            android:layout_marginBottom="20dp">
-
-            <TextView
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="Add New Task"
-                android:textSize="20sp"
-                android:textStyle="bold"
-                android:textColor="#0F172A" />
-
-            <ImageView
-                android:id="@+id/btn_close_dialog"
-                android:layout_width="32dp"
-                android:layout_height="32dp"
-                android:src="@android:drawable/ic_menu_close_clear_cancel"
-                android:clickable="true"
-                android:focusable="true"
-                android:padding="4dp"
-                android:contentDescription="Close" />
-        </LinearLayout>
+            android:text="Add New Task"
+            android:textSize="20sp"
+            android:textStyle="bold"
+            android:textColor="#0F172A"
+            android:layout_marginBottom="20dp" />
 
         <!-- Title -->
         <com.google.android.material.textfield.TextInputLayout
@@ -160,9 +141,9 @@
             android:id="@+id/btn_pick_date"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="📅 Select Date"
-            android:backgroundTint="#EFF6FF"
-            android:textColor="#2563EB"
+            android:text="Select Date"
+            android:backgroundTint="#F1F5F9"
+            android:textColor="#0F172A"
             android:layout_marginBottom="14dp" />
 
         <!-- Time picker -->
@@ -179,9 +160,9 @@
             android:id="@+id/btn_pick_time"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="⏰ Select Time"
-            android:backgroundTint="#EFF6FF"
-            android:textColor="#2563EB"
+            android:text="Select Time"
+            android:backgroundTint="#F1F5F9"
+            android:textColor="#0F172A"
             android:layout_marginBottom="14dp" />
 
         <!-- Alert toggle -->
@@ -208,6 +189,7 @@
         </LinearLayout>
 
         <!-- Recurring toggle -->
+        <!-- Recurring toggle -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -219,7 +201,7 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="🔁 Add to Daily Routine"
+                android:text="🔁 Add to routine "
                 android:textSize="14sp"
                 android:textColor="#0F172A" />
 
@@ -228,6 +210,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:checked="false" />
+
         </LinearLayout>
 
         <!-- Confirm button -->
@@ -235,11 +218,11 @@
             android:id="@+id/btn_add_task_confirm"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Add Task"
             android:backgroundTint="#2563EB"
+            android:padding="14dp"
+            android:text="Add Task"
             android:textColor="#FFFFFF"
-            android:textSize="16sp"
-            android:padding="14dp" />
+            android:textSize="16sp" />
 
     </LinearLayout>
 </ScrollView>

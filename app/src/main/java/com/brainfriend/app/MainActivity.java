@@ -15,6 +15,7 @@ import com.brainfriend.app.fragments.SettingsFragment;
 import com.brainfriend.app.fragments.TasksFragment;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.firestore.FirebaseFirestore;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -35,6 +36,48 @@ public class MainActivity extends AppCompatActivity {
 
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        // ── Load user preferences from Firestore and save locally ──────────
+        if (FirebaseAuth.getInstance().getCurrentUser() != null) {
+            String userId = FirebaseAuth.getInstance().getCurrentUser().getUid();
+            FirebaseFirestore.getInstance()
+                    .collection("userPreferences")
+                    .document(userId)
+                    .get()
+                    .addOnSuccessListener(doc -> {
+                        if (doc.exists()) {
+                            SharedPreferences.Editor editor = prefs.edit();
+
+                            // Dark mode (apply immediately if different from current)
+                            Boolean darkPref = doc.getBoolean("darkMode");
+                            if (darkPref != null) {
+                                editor.putBoolean("dark_mode", darkPref);
+                                AppCompatDelegate.setDefaultNightMode(darkPref
+                                        ? AppCompatDelegate.MODE_NIGHT_YES
+                                        : AppCompatDelegate.MODE_NIGHT_NO);
+                            }
+
+                            // Alert type: "Sound", "Vibration", "Pop-up only"
+                            if (doc.getString("alertType") != null)
+                                editor.putString("alertType", doc.getString("alertType"));
+
+                            // Reminder count: "Just a few", "Some", "Lots please!"
+                            if (doc.getString("reminderCount") != null)
+                                editor.putString("reminderCount", doc.getString("reminderCount"));
+
+                            // Reward type: "Stars", "Badges", "Kind words", "All"
+                            if (doc.getString("rewardType") != null)
+                                editor.putString("rewardType", doc.getString("rewardType"));
+
+                            // Missed task style: "gentle" or "direct"
+                            if (doc.getString("missedTaskStyle") != null)
+                                editor.putString("missedTaskStyle", doc.getString("missedTaskStyle"));
+
+                            editor.apply();
+                        }
+                    });
+        }
+        // ───────────────────────────────────────────────────────────────────
 
         BottomNavigationView navView = findViewById(R.id.bottom_navigation);
 
@@ -64,7 +107,7 @@ public class MainActivity extends AppCompatActivity {
         startSessionTimer();
     }
 
-    // ─── Session timeout ───
+    // ─── Session timeout ───────────────────────────────────────────────────
     private void startSessionTimer() {
         sessionRunnable = () -> {
             FirebaseAuth.getInstance().signOut();
@@ -91,16 +134,14 @@ public class MainActivity extends AppCompatActivity {
         sessionHandler.removeCallbacks(sessionRunnable);
     }
 
-    // ─── Back button — double press to exit ───
+    // ─── Back button — double press to exit ───────────────────────────────
     @Override
     public void onBackPressed() {
-        // If fragment back stack has entries, pop them
         if (getSupportFragmentManager().getBackStackEntryCount() > 0) {
             getSupportFragmentManager().popBackStack();
             return;
         }
 
-        // If on home tab already — double press to exit
         if (backPressedOnce) {
             super.onBackPressed();
             return;

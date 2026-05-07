@@ -16,6 +16,7 @@ import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatDelegate;
 import androidx.fragment.app.Fragment;
 import com.brainfriend.app.R;
+import com.brainfriend.app.SurveyActivity;
 import com.google.android.material.switchmaterial.SwitchMaterial;
 import com.google.firebase.auth.AuthCredential;
 import com.google.firebase.auth.EmailAuthProvider;
@@ -68,28 +69,29 @@ public class SettingsFragment extends Fragment {
         view.findViewById(R.id.btn_delete_account)
                 .setOnClickListener(v -> showDeleteAccountDialog());
 
+        //Redo survey button
+        View btnRedoSurvey = view.findViewById(R.id.btn_redo_survey);
+        if (btnRedoSurvey != null) {
+            btnRedoSurvey.setOnClickListener(v ->
+                    startActivity(new Intent(requireContext(), SurveyActivity.class)));
+        }
+
         return view;
     }
 
-    // ─── Dark Mode ───
+    //Dark Mode
     private void setupDarkMode(View view) {
         SwitchMaterial switchDark = view.findViewById(R.id.switch_dark_mode);
         if (switchDark == null) return;
 
-        // Read saved preference — NOT from AppCompatDelegate
         boolean isDark = prefs.getBoolean("dark_mode", false);
         switchDark.setChecked(isDark);
 
         switchDark.setOnCheckedChangeListener((btn, checked) -> {
-            // Save first
             prefs.edit().putBoolean("dark_mode", checked).apply();
-
-            // Apply mode
             AppCompatDelegate.setDefaultNightMode(checked
                     ? AppCompatDelegate.MODE_NIGHT_YES
                     : AppCompatDelegate.MODE_NIGHT_NO);
-
-            // Recreate to apply
             requireActivity().recreate();
         });
     }
@@ -202,8 +204,7 @@ public class SettingsFragment extends Fragment {
                     String newPass = etNew.getText().toString().trim();
                     String confirm = etConfirm.getText().toString().trim();
 
-                    if (current.isEmpty() || newPass.isEmpty()
-                            || confirm.isEmpty()) {
+                    if (current.isEmpty() || newPass.isEmpty() || confirm.isEmpty()) {
                         Toast.makeText(getContext(), "All fields required",
                                 Toast.LENGTH_SHORT).show();
                         return;
