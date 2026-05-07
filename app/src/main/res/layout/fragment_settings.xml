@@ -262,6 +262,63 @@
             </LinearLayout>
         </androidx.cardview.widget.CardView>
 
+        <!-- ── PREFERENCES SECTION (new) ──────────────────────────────── -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="PREFERENCES"
+            android:textSize="11sp"
+            android:textStyle="bold"
+            android:textColor="#94A3B8"
+            android:letterSpacing="0.1"
+            android:paddingStart="24dp"
+            android:paddingTop="24dp"
+            android:paddingBottom="8dp" />
+
+        <androidx.cardview.widget.CardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="16dp"
+            android:layout_marginEnd="16dp"
+            app:cardCornerRadius="16dp"
+            app:cardElevation="2dp"
+            app:cardBackgroundColor="#FFFFFF">
+
+            <LinearLayout
+                android:id="@+id/btn_redo_survey"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:padding="18dp"
+                android:clickable="true"
+                android:focusable="true"
+                android:background="?attr/selectableItemBackground">
+
+                <ImageView
+                    android:layout_width="22dp"
+                    android:layout_height="22dp"
+                    android:src="@android:drawable/ic_menu_preferences"
+                    app:tint="#2563EB" />
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="Redo my preferences"
+                    android:textSize="15sp"
+                    android:textColor="#0F172A"
+                    android:paddingStart="14dp" />
+
+                <ImageView
+                    android:layout_width="16dp"
+                    android:layout_height="16dp"
+                    android:src="@android:drawable/ic_media_next"
+                    app:tint="#94A3B8" />
+            </LinearLayout>
+        </androidx.cardview.widget.CardView>
+        <!-- ──────────────────────────────────────────────────────────── -->
+
         <!-- Danger Zone -->
         <TextView
             android:layout_width="wrap_content"

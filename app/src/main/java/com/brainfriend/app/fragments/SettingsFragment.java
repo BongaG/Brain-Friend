@@ -17,6 +17,7 @@ import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatDelegate;
 import androidx.fragment.app.Fragment;
 import com.brainfriend.app.R;
+import com.brainfriend.app.SurveyActivity;
 import com.google.android.material.switchmaterial.SwitchMaterial;
 import com.google.firebase.auth.AuthCredential;
 import com.google.firebase.auth.EmailAuthProvider;
@@ -70,6 +71,13 @@ public class SettingsFragment extends Fragment {
                 .setOnClickListener(v -> showLogoutDialog());
         view.findViewById(R.id.btn_delete_account)
                 .setOnClickListener(v -> showDeleteAccountDialog());
+
+        //Redo survey button
+        View btnRedoSurvey = view.findViewById(R.id.btn_redo_survey);
+        if (btnRedoSurvey != null) {
+            btnRedoSurvey.setOnClickListener(v ->
+                    startActivity(new Intent(requireContext(), SurveyActivity.class)));
+        }
 
         return view;
     }

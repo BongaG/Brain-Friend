@@ -15,7 +15,7 @@
         android:text="Upcoming Reminders"
         android:textSize="20sp"
         android:textStyle="bold"
-        android:textColor="#3B2F6E"
+        android:textColor="#2563EB"
         android:layout_marginBottom="16dp"/>
 
     <androidx.recyclerview.widget.RecyclerView

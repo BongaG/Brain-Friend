@@ -97,7 +97,7 @@
         android:layout_height="wrap_content"
         android:text="Don't have an account? Register"
         android:textAlignment="center"
-        android:textColor="#64748B"
+        android:textColor="#6474EB"
         android:clickable="true"
         android:focusable="true" />
 

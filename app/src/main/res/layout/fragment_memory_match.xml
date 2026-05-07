@@ -24,7 +24,7 @@
         android:textColor="#2563EB"
         android:layout_marginBottom="16dp" />
 
-    <!-- Difficulty Spinner -->
+
     <Spinner
         android:id="@+id/spinner_difficulty_memory"
         android:layout_width="match_parent"
@@ -33,7 +33,7 @@
         android:entries="@array/memory_difficulty_levels"
         android:background="@android:drawable/editbox_background" />
 
-    <!-- Info row: Score, Attempts, Timer -->
+
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -56,8 +56,8 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:text="Attempts: 0"
-            android:textSize="14sp"
-            android:textColor="#6B63A0" />
+            android:textSize="15sp"
+            android:textColor="#2563EB" />
 
         <TextView
             android:id="@+id/tv_timer"
@@ -65,8 +65,8 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:text="Time: 0s"
-            android:textSize="14sp"
-            android:textColor="#E53935"
+            android:textSize="15sp"
+            android:textColor="#F44336"
             android:textStyle="bold"
             android:gravity="end" />
     </LinearLayout>
@@ -90,8 +90,9 @@
         android:id="@+id/tv_feedback_memory"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:textSize="14sp"
-        android:textColor="#2563EB"
+        android:textSize="18sp"
+        android:textStyle="bold"
+        android:textColor="#E53935"
         android:layout_marginTop="8dp"
         android:visibility="gone"
         android:layout_gravity="center" />
