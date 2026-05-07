@@ -20,19 +20,20 @@ public class TaskAlarmReceiver extends BroadcastReceiver {
         if (title == null) title = "Upcoming Task";
 
         final String taskTitle = title;
-        final int notifId = taskTitle.hashCode();
+        final int notifId = ("alert_" + taskTitle).hashCode();
 
         Intent mainIntent = new Intent(context, MainActivity.class);
         PendingIntent pendingIntent = PendingIntent.getActivity(
-                context, 0, mainIntent,
-                PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
+                context, notifId, mainIntent,
+                PendingIntent.FLAG_UPDATE_CURRENT
+                        | PendingIntent.FLAG_IMMUTABLE);
 
-        // Show loading notification first
+        // Show immediately
         showNotification(context, taskTitle,
-                "🧠 Brain Friend is personalising your reminder...",
+                "🧠 Personalising your reminder...",
                 pendingIntent, notifId);
 
-        // Get AI message — always from Claude
+        // Get AI message
         AiInsightsHelper.getSmartReminderMessage(taskTitle, importance,
                 category != null ? category : "Personal",
                 new AiInsightsHelper.AiCallback() {
@@ -44,70 +45,32 @@ public class TaskAlarmReceiver extends BroadcastReceiver {
 
                     @Override
                     public void onError(String error) {
-                        // Retry with simpler prompt
-                        AiInsightsHelper.callCognitivePrompt(
-                                "Write a 1 sentence phone reminder for task: \""
-                                        + taskTitle + "\". 1 emoji.",
-                                new AiInsightsHelper.AiCallback() {
-                                    @Override
-                                    public void onResult(String msg) {
-                                        showNotification(context, taskTitle,
-                                                msg, pendingIntent, notifId);
-                                    }
-                                    @Override
-                                    public void onError(String e) {
-                                        // Last resort — still call Claude
-                                        // with absolute minimal prompt
-                                        AiInsightsHelper.callCognitivePrompt(
-                                                "1 sentence task reminder. "
-                                                        + "1 emoji.",
-                                                new AiInsightsHelper.AiCallback() {
-                                                    @Override
-                                                    public void onResult(
-                                                            String m) {
-                                                        showNotification(
-                                                                context,
-                                                                taskTitle,
-                                                                m,
-                                                                pendingIntent,
-                                                                notifId);
-                                                    }
-                                                    @Override
-                                                    public void onError(
-                                                            String err) {
-                                                        // Only now show
-                                                        // truly minimal text
-                                                        showNotification(
-                                                                context,
-                                                                taskTitle,
-                                                                "⏰ Starting soon",
-                                                                pendingIntent,
-                                                                notifId);
-                                                    }
-                                                });
-                                    }
-                                });
+                        showNotification(context, taskTitle,
+                                "⏰ \"" + taskTitle
+                                        + "\" starts in 10 minutes — get ready!",
+                                pendingIntent, notifId);
                     }
                 });
     }
 
     private void showNotification(Context context, String title,
-                                  String message, PendingIntent pendingIntent,
+                                  String message,
+                                  PendingIntent pendingIntent,
                                   int notifId) {
-        NotificationCompat.Builder builder = new NotificationCompat.Builder(
-                context, "task_alerts")
-                .setSmallIcon(R.drawable.ic_nav_task)
-                .setContentTitle("🧠 Brain Friend — " + title)
-                .setContentText(message)
-                .setStyle(new NotificationCompat.BigTextStyle().bigText(message))
-                .setPriority(NotificationCompat.PRIORITY_HIGH)
-                .setAutoCancel(true)
-                .setContentIntent(pendingIntent);
+        NotificationCompat.Builder builder =
+                new NotificationCompat.Builder(context, "task_alerts")
+                        .setSmallIcon(R.drawable.ic_nav_task)
+                        .setContentTitle("🧠 Brain Friend — " + title)
+                        .setContentText(message)
+                        .setStyle(new NotificationCompat
+                                .BigTextStyle().bigText(message))
+                        .setPriority(NotificationCompat.PRIORITY_HIGH)
+                        .setAutoCancel(true)
+                        .setContentIntent(pendingIntent);
 
         NotificationManager manager = (NotificationManager)
                 context.getSystemService(Context.NOTIFICATION_SERVICE);
-        if (manager != null) {
+        if (manager != null)
             manager.notify(notifId, builder.build());
-        }
     }
 }

@@ -67,4 +67,13 @@
         android:textColor="#2563EB"
         android:layout_marginTop="8dp"
         android:visibility="gone" />
+
+    <Button
+        android:id="@+id/btn_hint"
+        android:layout_width="match_parent"
+        android:layout_height="56dp"
+        android:text="💡 Show Hint"
+        android:backgroundTint="#2563EB"
+        android:textColor="#FFFFFF"
+        android:layout_marginTop="8dp" />
 </LinearLayout>

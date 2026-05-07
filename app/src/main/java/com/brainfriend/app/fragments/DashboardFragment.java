@@ -35,8 +35,10 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
+import java.util.Set;
 
 public class DashboardFragment extends Fragment {
 
@@ -46,6 +48,10 @@ public class DashboardFragment extends Fragment {
     private View rootView;
     private TextView tvAiInsight;
     private boolean aiLoaded = false;
+    private boolean cognitiveLoaded = false;
+    private boolean weeklyLoaded = false;
+    private boolean missedAlerted = false;
+    private final Set<String> alertedMissedIds = new HashSet<>();
 
     @Nullable
     @Override
@@ -78,142 +84,95 @@ public class DashboardFragment extends Fragment {
         if (cvNext != null) cvNext.setVisibility(View.VISIBLE);
 
         ImageView ivBell = view.findViewById(R.id.iv_notification_bell);
-        if (ivBell != null) ivBell.setOnClickListener(v -> showSlideInPanel(v));
+        if (ivBell != null)
+            ivBell.setOnClickListener(v -> showSlideInPanel(v));
 
         loadUserName(view);
         loadDashboardData(view);
-        checkMissedTasksAndAlert(view);
     }
 
-    // ─── Load user name ───
     private void loadUserName(View view) {
         if (userId == null) return;
         db.collection("users").document(userId).get()
                 .addOnSuccessListener(doc -> {
                     if (!isAdded() || doc == null) return;
                     String name = doc.getString("name");
-                    TextView tvGreeting = view.findViewById(R.id.tv_greeting);
+                    TextView tvGreeting =
+                            view.findViewById(R.id.tv_greeting);
                     if (tvGreeting != null && name != null) {
-                        String firstName = name.split(" ")[0];
-                        tvGreeting.setText("Hello, " + firstName + "!");
+                        tvGreeting.setText("Hello, "
+                                + name.split(" ")[0] + "!");
                     }
                 });
     }
 
-    // ─── Main dashboard data ───
     private void loadDashboardData(View view) {
         if (userId == null) return;
 
-        // ── All tasks listener — AI insight + focus + notifications ──
         db.collection("tasks")
                 .whereEqualTo("userId", userId)
-                .addSnapshotListener((allVal, err) -> {
-                    if (!isAdded() || allVal == null) return;
+                .addSnapshotListener((snap, err) -> {
+                    if (!isAdded() || snap == null) return;
 
-                    List<Task> allTasks = allVal.toObjects(Task.class);
+                    List<Task> allTasks = snap.toObjects(Task.class);
                     int total = allTasks.size();
                     int completed = 0;
                     notificationItems.clear();
                     Date now = new Date();
 
-                    for (Task t : allTasks) {
-                        if (t.isCompleted()) {
-                            completed++;
-                            // Completed notification
-                            notificationItems.add(new NotificationItem(
-                                    "✅ Completed",
-                                    "\"" + t.getTitle() + "\" is done",
-                                    NotificationItem.TYPE_DONE,
-                                    t.getId(),
-                                    t.getTitle(),
-                                    t.getImportance(),
-                                    t.getCategory()));
-                        } else if (t.getDueDate() != null
-                                && t.getDueDate().before(now)) {
-                            // Overdue notification
-                            notificationItems.add(new NotificationItem(
-                                    "⚠️ Overdue",
-                                    "\"" + t.getTitle() + "\" is overdue",
-                                    NotificationItem.TYPE_OVERDUE,
-                                    t.getId(),
-                                    t.getTitle(),
-                                    t.getImportance(),
-                                    t.getCategory()));
-                        } else if (t.getDueDate() != null) {
-                            long diff = t.getDueDate().getTime() - now.getTime();
-                            if (diff > 0 && diff <= 15 * 60 * 1000) {
-                                // Starting soon notification
-                                notificationItems.add(new NotificationItem(
-                                        "🔔 Starting Soon",
-                                        "\"" + t.getTitle()
-                                                + "\" starts in 15 minutes",
-                                        NotificationItem.TYPE_ALERT,
-                                        t.getId(),
-                                        t.getTitle(),
-                                        t.getImportance(),
-                                        t.getCategory()));
-                            }
-                        }
-                    }
-
-                    // Focus level
-                    int focusLevel = total > 0
-                            ? (completed * 100 / total) : 0;
-                    TextView tvFocus = view.findViewById(R.id.tv_focus_level);
-                    if (tvFocus != null) tvFocus.setText(focusLevel + "%");
-
-                    // Badge dot
-                    View badge = view.findViewById(R.id.notification_badge);
-                    if (badge != null) {
-                        boolean hasUrgent = notificationItems.stream()
-                                .anyMatch(n ->
-                                        n.getType() == NotificationItem.TYPE_OVERDUE
-                                                || n.getType() == NotificationItem.TYPE_ALERT);
-                        badge.setVisibility(
-                                hasUrgent ? View.VISIBLE : View.GONE);
-                    }
-
-                    // AI home insight — load once per session
-                    if (!aiLoaded) {
-                        aiLoaded = true;
-                        loadAiInsight(allTasks, focusLevel, view);
-                    }
-
-                    // Cognitive performance suggestion
-                    if (total > 0) {
-                        loadCognitivePerformanceSuggestion(
-                                focusLevel, total - completed,
-                                completed, total, view);
-                    }
-
-                    // Weekly brain report
-                    checkWeeklyReport(allTasks, view);
-                });
-
-        // ── Today's progress + pending count + Up Next ──
-        db.collection("tasks")
-                .whereEqualTo("userId", userId)
-                .addSnapshotListener((val, err) -> {
-                    if (!isAdded() || val == null) return;
-                    List<Task> allTasks = val.toObjects(Task.class);
-
+                    // Today range
                     Calendar startOfDay = Calendar.getInstance();
                     startOfDay.set(Calendar.HOUR_OF_DAY, 0);
                     startOfDay.set(Calendar.MINUTE, 0);
                     startOfDay.set(Calendar.SECOND, 0);
-
                     Calendar endOfDay = Calendar.getInstance();
                     endOfDay.set(Calendar.HOUR_OF_DAY, 23);
                     endOfDay.set(Calendar.MINUTE, 59);
                     endOfDay.set(Calendar.SECOND, 59);
 
-                    int todayTotal = 0;
-                    int todayDone = 0;
-                    int pendingCount = 0;
-                    Date now = new Date();
+                    int todayTotal = 0, todayDone = 0, pendingCount = 0;
 
                     for (Task t : allTasks) {
+                        if (t.isCompleted()) {
+                            completed++;
+                            notificationItems.add(new NotificationItem(
+                                    "✅ Completed",
+                                    "\"" + t.getTitle() + "\" is done",
+                                    NotificationItem.TYPE_DONE,
+                                    t.getId(), t.getTitle(),
+                                    t.getImportance(), t.getCategory()));
+                        } else if (t.getDueDate() != null
+                                && t.getDueDate().before(now)) {
+                            notificationItems.add(new NotificationItem(
+                                    "⚠️ Overdue",
+                                    "\"" + t.getTitle() + "\" is overdue",
+                                    NotificationItem.TYPE_OVERDUE,
+                                    t.getId(), t.getTitle(),
+                                    t.getImportance(), t.getCategory()));
+
+                            // Fire missed notification ONCE per task
+                            if (t.getId() != null
+                                    && !alertedMissedIds.contains(
+                                    t.getId())) {
+                                alertedMissedIds.add(t.getId());
+                                fireMissedTaskNotification(t);
+                            }
+                        } else if (t.getDueDate() != null) {
+                            long diff = t.getDueDate().getTime()
+                                    - now.getTime();
+                            if (diff > 0 && diff <= 15 * 60 * 1000) {
+                                notificationItems.add(new NotificationItem(
+                                        "🔔 Starting Soon",
+                                        "\"" + t.getTitle()
+                                                + "\" starts in 15 min",
+                                        NotificationItem.TYPE_ALERT,
+                                        t.getId(), t.getTitle(),
+                                        t.getImportance(), t.getCategory()));
+                            }
+                        }
+
                         if (!t.isCompleted()) pendingCount++;
+
                         if (t.getDueDate() != null) {
                             long due = t.getDueDate().getTime();
                             if (due >= startOfDay.getTimeInMillis()
@@ -224,8 +183,18 @@ public class DashboardFragment extends Fragment {
                         }
                     }
 
-                    // Pending count
-                    TextView tvPending = view.findViewById(R.id.tv_pending_count);
+                    // Focus level
+                    int focusLevel = total > 0
+                            ? (completed * 100 / total) : 0;
+
+                    // Update UI
+                    TextView tvFocus =
+                            view.findViewById(R.id.tv_focus_level);
+                    if (tvFocus != null)
+                        tvFocus.setText(focusLevel + "%");
+
+                    TextView tvPending =
+                            view.findViewById(R.id.tv_pending_count);
                     if (tvPending != null)
                         tvPending.setText(String.valueOf(pendingCount));
 
@@ -234,7 +203,8 @@ public class DashboardFragment extends Fragment {
                             ? (todayDone * 100 / todayTotal) : 0;
                     int remaining = todayTotal - todayDone;
 
-                    ProgressBar pbToday = view.findViewById(R.id.pb_today);
+                    ProgressBar pbToday =
+                            view.findViewById(R.id.pb_today);
                     TextView tvProgressPct =
                             view.findViewById(R.id.tv_today_progress_pct);
                     TextView tvTasksDone =
@@ -244,7 +214,8 @@ public class DashboardFragment extends Fragment {
                     TextView tvStreak =
                             view.findViewById(R.id.tv_streak_badge);
 
-                    if (pbToday != null) pbToday.setProgress(progressPct);
+                    if (pbToday != null)
+                        pbToday.setProgress(progressPct);
                     if (tvProgressPct != null)
                         tvProgressPct.setText(progressPct + "% Complete");
                     if (tvTasksDone != null)
@@ -255,7 +226,21 @@ public class DashboardFragment extends Fragment {
                     if (tvStreak != null)
                         tvStreak.setText("🔥 " + todayDone + " Done Today");
 
-                    // Up Next — next incomplete upcoming task
+                    // Badge dot
+                    View badge =
+                            view.findViewById(R.id.notification_badge);
+                    if (badge != null) {
+                        boolean hasUrgent = notificationItems.stream()
+                                .anyMatch(n ->
+                                        n.getType()
+                                                == NotificationItem.TYPE_OVERDUE
+                                                || n.getType()
+                                                == NotificationItem.TYPE_ALERT);
+                        badge.setVisibility(
+                                hasUrgent ? View.VISIBLE : View.GONE);
+                    }
+
+                    // Up Next
                     TextView tvStatus =
                             view.findViewById(R.id.tv_upcoming_status);
                     TextView tvTitle =
@@ -267,8 +252,7 @@ public class DashboardFragment extends Fragment {
                     for (Task t : allTasks) {
                         if (!t.isCompleted() && t.getDueDate() != null
                                 && t.getDueDate().after(now)) {
-                            if (nextTask == null
-                                    || t.getDueDate().before(
+                            if (nextTask == null || t.getDueDate().before(
                                     nextTask.getDueDate())) {
                                 nextTask = t;
                             }
@@ -276,17 +260,15 @@ public class DashboardFragment extends Fragment {
                     }
 
                     if (nextTask != null) {
-                        Task finalNext = nextTask;
+                        Task fn = nextTask;
                         if (tvStatus != null)
                             tvStatus.setVisibility(View.VISIBLE);
-                        if (tvTitle != null)
-                            tvTitle.setText(finalNext.getTitle());
+                        if (tvTitle != null) tvTitle.setText(fn.getTitle());
                         if (tvTime != null) {
                             SimpleDateFormat sdf = new SimpleDateFormat(
                                     "EEE, dd MMM 'at' HH:mm",
                                     Locale.getDefault());
-                            tvTime.setText(sdf.format(
-                                    finalNext.getDueDate()));
+                            tvTime.setText(sdf.format(fn.getDueDate()));
                         }
                     } else {
                         if (tvStatus != null)
@@ -297,8 +279,9 @@ public class DashboardFragment extends Fragment {
                         if (tvTime != null) tvTime.setText("");
                     }
 
-                    // View All → Tasks tab
-                    TextView tvViewAll = view.findViewById(R.id.tv_view_all);
+                    // View All
+                    TextView tvViewAll =
+                            view.findViewById(R.id.tv_view_all);
                     if (tvViewAll != null) {
                         tvViewAll.setOnClickListener(v2 -> {
                             if (getActivity() != null) {
@@ -311,11 +294,31 @@ public class DashboardFragment extends Fragment {
                             }
                         });
                     }
+
+                    // AI — load once per session only
+                    if (!aiLoaded && isAdded()) {
+                        aiLoaded = true;
+                        loadAiInsight(allTasks, focusLevel, view);
+                    }
+
+                    // Cognitive — load once per session
+                    if (!cognitiveLoaded && total > 0 && isAdded()) {
+                        cognitiveLoaded = true;
+                        loadCognitivePerformanceSuggestion(
+                                focusLevel, total - completed,
+                                completed, total, view);
+                    }
+
+                    // Weekly — load once per session
+                    if (!weeklyLoaded && isAdded()) {
+                        weeklyLoaded = true;
+                        checkWeeklyReport(allTasks, view);
+                    }
                 });
     }
 
-    // ─── AI Home Insight ───
-    private void loadAiInsight(List<Task> tasks, int focusLevel, View view) {
+    private void loadAiInsight(List<Task> tasks, int focusLevel,
+                               View view) {
         if (tvAiInsight != null) {
             tvAiInsight.setText("🧠 Analysing your tasks...");
             startPulseAnimation(tvAiInsight);
@@ -326,49 +329,26 @@ public class DashboardFragment extends Fragment {
                     @Override
                     public void onResult(String insight) {
                         new Handler(Looper.getMainLooper()).post(() -> {
-                            if (!isAdded()) return;
-                            if (tvAiInsight != null) {
-                                tvAiInsight.clearAnimation();
-                                tvAiInsight.setAlpha(1f);
-                                tvAiInsight.setText(insight);
-                            }
+                            if (!isAdded() || tvAiInsight == null) return;
+                            tvAiInsight.clearAnimation();
+                            tvAiInsight.setAlpha(1f);
+                            tvAiInsight.setText(insight);
                         });
                     }
 
                     @Override
                     public void onError(String error) {
-                        // Don't show hardcoded text — call Claude with simpler prompt
-                        AiInsightsHelper.callCognitivePrompt(
-                                "You are Brain Friend AI. Give a short encouraging "
-                                        + "message for a student. Max 2 sentences. 1 emoji.",
-                                new AiInsightsHelper.AiCallback() {
-                                    @Override
-                                    public void onResult(String msg) {
-                                        new Handler(Looper.getMainLooper()).post(() -> {
-                                            if (!isAdded()) return;
-                                            if (tvAiInsight != null) {
-                                                tvAiInsight.clearAnimation();
-                                                tvAiInsight.setAlpha(1f);
-                                                tvAiInsight.setText(msg);
-                                            }
-                                        });
-                                    }
-
-                                    @Override
-                                    public void onError(String e) {
-                                        new Handler(Looper.getMainLooper()).post(() -> {
-                                            if (!isAdded()) return;
-                                            if (tvAiInsight != null) {
-                                                tvAiInsight.setText("🧠 AI is thinking...");
-                                            }
-                                        });
-                                    }
-                                });
+                        new Handler(Looper.getMainLooper()).post(() -> {
+                            if (!isAdded() || tvAiInsight == null) return;
+                            tvAiInsight.clearAnimation();
+                            tvAiInsight.setAlpha(1f);
+                            tvAiInsight.setText(
+                                    "🧠 Stay focused — you've got this!");
+                        });
                     }
                 });
     }
 
-    // ─── AI Cognitive Performance Suggestion ───
     private void loadCognitivePerformanceSuggestion(int focusLevel,
                                                     int pendingCount,
                                                     int completed,
@@ -380,47 +360,35 @@ public class DashboardFragment extends Fragment {
 
         focusTipCard.setVisibility(View.VISIBLE);
 
-        // Set card color based on focus level
         if (focusLevel < 50) {
-            ((androidx.cardview.widget.CardView) focusTipCard)
-                    .setCardBackgroundColor(
-                            android.graphics.Color.parseColor("#FFFBEB"));
+            ((CardView) focusTipCard).setCardBackgroundColor(
+                    android.graphics.Color.parseColor("#FFFBEB"));
             tvFocusTip.setTextColor(
                     android.graphics.Color.parseColor("#92400E"));
         } else {
-            ((androidx.cardview.widget.CardView) focusTipCard)
-                    .setCardBackgroundColor(
-                            android.graphics.Color.parseColor("#F0FDF4"));
+            ((CardView) focusTipCard).setCardBackgroundColor(
+                    android.graphics.Color.parseColor("#F0FDF4"));
             tvFocusTip.setTextColor(
                     android.graphics.Color.parseColor("#166534"));
         }
 
-        // Show loading state
-        tvFocusTip.setText("🧠 Generating your cognitive tip...");
+        tvFocusTip.setText("🧠 Generating cognitive tip...");
         startPulseAnimation(tvFocusTip);
 
-        // Build prompt with real user data
         String level = focusLevel < 30 ? "very low"
                 : focusLevel < 50 ? "low"
                 : focusLevel < 70 ? "moderate"
                 : focusLevel < 90 ? "good" : "excellent";
 
-        String prompt =
-                "You are Brain Friend, a cognitive support AI for students "
-                        + "with memory and focus challenges.\n\n"
-                        + "Student data right now:\n"
-                        + "- Focus level: " + focusLevel + "% (" + level + ")\n"
-                        + "- Tasks completed: " + completed + " out of " + total + "\n"
-                        + "- Tasks still pending: " + pendingCount + "\n\n"
-                        + "Give ONE cognitive performance suggestion. "
-                        + "Max 2 sentences. 1 emoji. "
-                        + "Be science-backed and specific to their numbers. "
-                        + "Suggest something they can do RIGHT NOW. "
-                        + "Sound like a supportive coach. "
-                        + "Never give the same suggestion twice — "
-                        + "rotate between: breathing, movement, hydration, breaks, "
-                        + "task batching, focus music, phone-free time, cold water, "
-                        + "celebration, journaling, stretching, Pomodoro technique.";
+        String prompt = "Brain Friend cognitive coach.\n"
+                + "Focus: " + focusLevel + "% (" + level + ")\n"
+                + "Completed: " + completed + "/" + total + "\n"
+                + "Pending: " + pendingCount + "\n"
+                + "Give ONE cognitive tip. Max 2 sentences. 1 emoji. "
+                + "Science-backed. Actionable NOW. Vary each time between: "
+                + "breathing, movement, hydration, breaks, task batching, "
+                + "music, phone-free time, celebration, journaling, "
+                + "stretching, Pomodoro.";
 
         AiInsightsHelper.callCognitivePrompt(prompt,
                 new AiInsightsHelper.AiCallback() {
@@ -436,75 +404,49 @@ public class DashboardFragment extends Fragment {
 
                     @Override
                     public void onError(String error) {
-                        // On error call Claude again with simpler prompt
-                        // never show hardcoded text
-                        AiInsightsHelper.callCognitivePrompt(
-                                "Give a 1 sentence brain tip for a student. "
-                                        + "1 emoji. Be encouraging.",
-                                new AiInsightsHelper.AiCallback() {
-                                    @Override
-                                    public void onResult(String tip) {
-                                        new Handler(Looper.getMainLooper())
-                                                .post(() -> {
-                                                    if (!isAdded()) return;
-                                                    tvFocusTip.clearAnimation();
-                                                    tvFocusTip.setAlpha(1f);
-                                                    tvFocusTip.setText(tip);
-                                                });
-                                    }
-
-                                    @Override
-                                    public void onError(String e) {
-                                        new Handler(Looper.getMainLooper())
-                                                .post(() -> {
-                                                    if (!isAdded()) return;
-                                                    tvFocusTip.clearAnimation();
-                                                    tvFocusTip.setAlpha(1f);
-                                                    tvFocusTip.setText(
-                                                            "🧠 AI is thinking...");
-                                                });
-                                    }
-                                });
+                        new Handler(Looper.getMainLooper()).post(() -> {
+                            if (!isAdded()) return;
+                            tvFocusTip.clearAnimation();
+                            tvFocusTip.setAlpha(1f);
+                            tvFocusTip.setText(
+                                    "💧 Drink water and take a deep breath "
+                                            + "before your next task.");
+                        });
                     }
                 });
     }
 
-    // ─── Weekly Brain Report ───
     private void checkWeeklyReport(List<Task> allTasks, View view) {
         View weeklyCard = view.findViewById(R.id.cv_weekly_report);
         TextView tvWeekly = view.findViewById(R.id.tv_weekly_report);
         if (weeklyCard == null || tvWeekly == null) return;
 
         weeklyCard.setVisibility(View.VISIBLE);
-        tvWeekly.setText("📊 Generating your weekly report...");
+        tvWeekly.setText("📊 Generating weekly report...");
 
         Calendar lastWeekStart = Calendar.getInstance();
         lastWeekStart.add(Calendar.DAY_OF_YEAR, -7);
         Date lastWeekDate = lastWeekStart.getTime();
-
-        int completedLastWeek = 0;
-        int totalLastWeek = 0;
-        int missedLastWeek = 0;
-        List<String> missedTitles = new ArrayList<>();
         Date now = new Date();
+
+        int completedLW = 0, totalLW = 0, missedLW = 0;
+        List<String> missedTitles = new ArrayList<>();
 
         for (Task t : allTasks) {
             if (t.getDueDate() != null
                     && t.getDueDate().after(lastWeekDate)
                     && t.getDueDate().before(now)) {
-                totalLastWeek++;
-                if (t.isCompleted()) completedLastWeek++;
+                totalLW++;
+                if (t.isCompleted()) completedLW++;
                 else {
-                    missedLastWeek++;
+                    missedLW++;
                     missedTitles.add(t.getTitle());
                 }
             }
         }
 
-        AiInsightsHelper.getWeeklyReport(
-                completedLastWeek, totalLastWeek,
-                missedLastWeek, "Wednesday",
-                missedTitles,
+        AiInsightsHelper.getWeeklyReport(completedLW, totalLW, missedLW,
+                "Wednesday", missedTitles,
                 new AiInsightsHelper.AiCallback() {
                     @Override
                     public void onResult(String report) {
@@ -524,31 +466,9 @@ public class DashboardFragment extends Fragment {
                 });
     }
 
-    // ─── Check and alert missed tasks ───
-    private void checkMissedTasksAndAlert(View view) {
-        if (userId == null) return;
-        db.collection("tasks")
-                .whereEqualTo("userId", userId)
-                .whereEqualTo("completed", false)
-                .get()
-                .addOnSuccessListener(snap -> {
-                    if (!isAdded() || snap == null) return;
-                    List<Task> tasks = snap.toObjects(Task.class);
-                    Date now = new Date();
-                    for (Task t : tasks) {
-                        if (t.getDueDate() != null
-                                && t.getDueDate().before(now)
-                                && t.getId() != null) {
-                            fireMissedTaskNotification(t);
-                        }
-                    }
-                });
-    }
-
     private void fireMissedTaskNotification(Task task) {
         AiInsightsHelper.getMissedTaskMessage(
-                task.getTitle(),
-                task.getImportance(),
+                task.getTitle(), task.getImportance(),
                 task.getCategory() != null ? task.getCategory() : "Personal",
                 new AiInsightsHelper.AiCallback() {
                     @Override
@@ -564,11 +484,9 @@ public class DashboardFragment extends Fragment {
                     public void onError(String error) {
                         new Handler(Looper.getMainLooper()).post(() -> {
                             if (!isAdded()) return;
-                            showMissedTaskNotification(
-                                    task.getTitle(),
-                                    "⚠️ \"" + task.getTitle()
-                                            + "\" was missed — reschedule it "
-                                            + "now to stay on track!",
+                            showMissedTaskNotification(task.getTitle(),
+                                    "⚠️ You missed \"" + task.getTitle()
+                                            + "\" — reschedule it now!",
                                     task.getId());
                         });
                     }
@@ -594,7 +512,7 @@ public class DashboardFragment extends Fragment {
                 new NotificationCompat.Builder(
                         requireContext(), "task_alerts")
                         .setSmallIcon(R.drawable.ic_nav_task)
-                        .setContentTitle("⚠️ Missed Task — " + taskTitle)
+                        .setContentTitle("⚠️ Missed — " + taskTitle)
                         .setContentText(message)
                         .setStyle(new NotificationCompat
                                 .BigTextStyle().bigText(message))
@@ -602,13 +520,11 @@ public class DashboardFragment extends Fragment {
                         .setAutoCancel(true)
                         .setContentIntent(pendingIntent);
 
-        if (manager != null) {
+        if (manager != null)
             manager.notify(("missed_" + taskId).hashCode(),
                     builder.build());
-        }
     }
 
-    // ─── Pulse animation ───
     private void startPulseAnimation(View view) {
         ObjectAnimator pulse = ObjectAnimator.ofFloat(
                 view, "alpha", 1f, 0.4f);
@@ -618,13 +534,13 @@ public class DashboardFragment extends Fragment {
         pulse.start();
     }
 
-    // ─── Notification slide panel ───
     private void showSlideInPanel(View anchor) {
         View panelView = LayoutInflater.from(getContext())
                 .inflate(R.layout.panel_notifications, null);
 
         RecyclerView rv = panelView.findViewById(R.id.rv_notifications);
-        LinearLayout llEmpty = panelView.findViewById(R.id.ll_notif_empty);
+        LinearLayout llEmpty =
+                panelView.findViewById(R.id.ll_notif_empty);
 
         if (notificationItems.isEmpty()) {
             rv.setVisibility(View.GONE);
@@ -633,7 +549,8 @@ public class DashboardFragment extends Fragment {
             rv.setVisibility(View.VISIBLE);
             if (llEmpty != null) llEmpty.setVisibility(View.GONE);
             rv.setLayoutManager(new LinearLayoutManager(getContext()));
-            rv.setAdapter(new NotificationsAdapter(notificationItems));
+            rv.setAdapter(new NotificationsAdapter(
+                    new ArrayList<>(notificationItems)));
         }
 
         int widthPx = (int) (300
@@ -663,12 +580,13 @@ public class DashboardFragment extends Fragment {
                         panelView, "translationX", 0f, widthPx);
                 slideOut.setDuration(250);
                 slideOut.setInterpolator(
-                        new android.view.animation.AccelerateInterpolator());
+                        new android.view.animation
+                                .AccelerateInterpolator());
                 slideOut.addListener(
                         new android.animation.AnimatorListenerAdapter() {
                             @Override
                             public void onAnimationEnd(
-                                    android.animation.Animator animation) {
+                                    android.animation.Animator a) {
                                 popup.dismiss();
                             }
                         });
