@@ -7,12 +7,10 @@ import android.app.TimePickerDialog;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Color;
-import android.os.Build;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Button;
 import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.ProgressBar;
@@ -21,45 +19,41 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
-import androidx.cardview.widget.CardView;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import com.brainfriend.app.R;
-import com.brainfriend.app.adapters.TasksAdapter;
-import com.brainfriend.app.models.Task;
-import com.brainfriend.app.reminders.TaskAlarmReceiver;
+import com.brainfriend.app.reminders.RoutineAlarmReceiver;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.FirebaseFirestore;
 import java.util.ArrayList;
 import java.util.Calendar;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import com.brainfriend.app.adapters.RoutineAdapter;
+import com.brainfriend.app.models.RoutineItem;
 
-public class RoutineFragment extends Fragment
-        implements TasksAdapter.OnTaskClickListener {
+public class RoutineFragment extends Fragment {
 
     private FirebaseFirestore db;
     private String userId;
-    private TasksAdapter adapter;
+    private RoutineAdapter adapter;
     private View llEmpty;
     private RecyclerView rv;
     private ProgressBar pbRoutine;
-    private TextView tvProgressPct, tvDone, tvStreak,
-            tvStatsTitle, tabDay, tabWeek, tabMonth;
+    private TextView tvProgressPct, tvDone, tvStreak, tvStatsTitle;
+    private TextView tabDay, tabWeek, tabMonth;
     private int currentTab = 0;
-    private List<Task> allRoutineTasks = new ArrayList<>();
+    private List<RoutineItem> allRoutineItems = new ArrayList<>();
 
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater,
                              @Nullable ViewGroup container,
                              @Nullable Bundle savedInstanceState) {
-        View view = inflater.inflate(R.layout.fragment_routine,
-                container, false);
+        View view = inflater.inflate(R.layout.fragment_routine, container, false);
 
         db = FirebaseFirestore.getInstance();
         userId = FirebaseAuth.getInstance().getUid();
@@ -75,18 +69,34 @@ public class RoutineFragment extends Fragment
         tabWeek = view.findViewById(R.id.tab_week);
         tabMonth = view.findViewById(R.id.tab_month);
 
-        adapter = new TasksAdapter(new ArrayList<>(), this);
+        adapter = new RoutineAdapter(new ArrayList<>(),
+                new RoutineAdapter.RoutineListener() {
+                    @Override
+                    public void onComplete(RoutineItem item) {
+                        // Toggle completed on routines collection
+                        db.collection("routines").document(item.getId())
+                                .update("completed", !item.isCompleted());
+                    }
+
+                    @Override
+                    public void onEdit(RoutineItem item) {
+                        showEditDialog(item);
+                    }
+
+                    @Override
+                    public void onDelete(RoutineItem item) {
+                        showDeleteDialog(item);
+                    }
+                });
+
         rv.setLayoutManager(new LinearLayoutManager(getContext()));
         rv.setAdapter(adapter);
-
-        // Long press to edit task
-        rv.addOnItemTouchListener(new RecyclerView.SimpleOnItemTouchListener());
 
         if (tabDay != null) tabDay.setOnClickListener(v -> switchTab(0));
         if (tabWeek != null) tabWeek.setOnClickListener(v -> switchTab(1));
         if (tabMonth != null) tabMonth.setOnClickListener(v -> switchTab(2));
 
-        loadRoutineTasks();
+        loadRoutineItems();
         return view;
     }
 
@@ -104,14 +114,17 @@ public class RoutineFragment extends Fragment
         tabWeek.setBackgroundColor(Color.TRANSPARENT);
         tabMonth.setTextColor(Color.parseColor("#BFDBFE"));
         tabMonth.setBackgroundColor(Color.TRANSPARENT);
-        TextView selected = currentTab == 0 ? tabDay
-                : currentTab == 1 ? tabWeek : tabMonth;
-        selected.setTextColor(Color.WHITE);
-        selected.setBackgroundColor(Color.parseColor("#2563EB"));
+        TextView sel = currentTab == 0 ? tabDay : currentTab == 1 ? tabWeek : tabMonth;
+        sel.setTextColor(Color.WHITE);
+        sel.setBackgroundColor(Color.parseColor("#2563EB"));
     }
 
     private void updateStats() {
-        if (allRoutineTasks.isEmpty()) {
+        String label = currentTab == 0 ? "TODAY'S ROUTINE"
+                : currentTab == 1 ? "THIS WEEK'S ROUTINE" : "THIS MONTH'S ROUTINE";
+        if (tvStatsTitle != null) tvStatsTitle.setText(label);
+
+        if (allRoutineItems.isEmpty()) {
             if (tvProgressPct != null) tvProgressPct.setText("0% Complete");
             if (pbRoutine != null) pbRoutine.setProgress(0);
             if (tvDone != null) tvDone.setText("● 0/0 Done");
@@ -119,293 +132,173 @@ public class RoutineFragment extends Fragment
             return;
         }
 
-        Calendar start = Calendar.getInstance();
-        Calendar end = Calendar.getInstance();
-        String label;
-
-        if (currentTab == 0) {
-            start.set(Calendar.HOUR_OF_DAY, 0);
-            start.set(Calendar.MINUTE, 0);
-            start.set(Calendar.SECOND, 0);
-            end.set(Calendar.HOUR_OF_DAY, 23);
-            end.set(Calendar.MINUTE, 59);
-            end.set(Calendar.SECOND, 59);
-            label = "TODAY'S ROUTINE";
-        } else if (currentTab == 1) {
-            start.set(Calendar.DAY_OF_WEEK, start.getFirstDayOfWeek());
-            start.set(Calendar.HOUR_OF_DAY, 0);
-            end.set(Calendar.DAY_OF_WEEK,
-                    start.getFirstDayOfWeek() + 6);
-            end.set(Calendar.HOUR_OF_DAY, 23);
-            end.set(Calendar.MINUTE, 59);
-            label = "THIS WEEK'S ROUTINE";
-        } else {
-            start.set(Calendar.DAY_OF_MONTH, 1);
-            start.set(Calendar.HOUR_OF_DAY, 0);
-            end.set(Calendar.DAY_OF_MONTH,
-                    end.getActualMaximum(Calendar.DAY_OF_MONTH));
-            end.set(Calendar.HOUR_OF_DAY, 23);
-            end.set(Calendar.MINUTE, 59);
-            label = "THIS MONTH'S ROUTINE";
-        }
-
-        if (tvStatsTitle != null) tvStatsTitle.setText(label);
-
-        int total = allRoutineTasks.size();
+        int total = allRoutineItems.size();
         int done = 0;
-        for (Task t : allRoutineTasks) {
-            if (t.isCompleted()) done++;
+        for (RoutineItem item : allRoutineItems) {
+            if (item.isCompleted()) done++;
         }
 
         int pct = total > 0 ? (done * 100 / total) : 0;
         if (pbRoutine != null) pbRoutine.setProgress(pct);
-        if (tvProgressPct != null)
-            tvProgressPct.setText(pct + "% Complete");
-        if (tvDone != null)
-            tvDone.setText("● " + done + "/" + total + " Done");
-        if (tvStreak != null)
-            tvStreak.setText("🔥 " + done + " Done");
+        if (tvProgressPct != null) tvProgressPct.setText(pct + "% Complete");
+        if (tvDone != null) tvDone.setText("● " + done + "/" + total + " Done");
+        if (tvStreak != null) tvStreak.setText("🔥 " + done + " Done");
     }
 
-    private void loadRoutineTasks() {
+    // Reads from "routines" collection — completely separate from "tasks"
+    private void loadRoutineItems() {
         if (userId == null) return;
-        db.collection("tasks")
+        db.collection("routines")
                 .whereEqualTo("userId", userId)
-                .whereEqualTo("recurring", true)
                 .addSnapshotListener((val, err) -> {
                     if (!isAdded() || val == null) return;
-                    allRoutineTasks = val.toObjects(Task.class);
-                    allRoutineTasks.sort((a, b) -> {
+                    allRoutineItems = val.toObjects(RoutineItem.class);
+                    allRoutineItems.sort((a, b) -> {
                         int ha = a.getDueHour() * 60 + a.getDueMinute();
                         int hb = b.getDueHour() * 60 + b.getDueMinute();
                         return Integer.compare(ha, hb);
                     });
-                    adapter.updateTasks(allRoutineTasks);
-                    showEmpty(allRoutineTasks.isEmpty());
+                    adapter.updateItems(allRoutineItems);
+                    showEmpty(allRoutineItems.isEmpty());
                     updateStats();
-
-                    // Schedule daily notification for each routine task
-                    for (Task t : allRoutineTasks) {
-                        if (t.getId() != null) {
-                            scheduleDailyNotification(t);
-                        }
+                    // Schedule daily notification for each routine item
+                    for (RoutineItem item : allRoutineItems) {
+                        if (item.getId() != null) scheduleDailyNotification(item);
                     }
                 });
     }
 
     private void showEmpty(boolean empty) {
-        if (llEmpty != null)
-            llEmpty.setVisibility(empty ? View.VISIBLE : View.GONE);
-        if (rv != null)
-            rv.setVisibility(empty ? View.GONE : View.VISIBLE);
+        if (llEmpty != null) llEmpty.setVisibility(empty ? View.VISIBLE : View.GONE);
+        if (rv != null) rv.setVisibility(empty ? View.GONE : View.VISIBLE);
     }
 
-    // ─── Edit task dialog ───
-    private void showEditTaskDialog(Task task) {
-        View dv = LayoutInflater.from(getContext())
-                .inflate(android.R.layout.simple_list_item_1, null);
-
+    private void showEditDialog(RoutineItem item) {
         LinearLayout layout = new LinearLayout(getContext());
         layout.setOrientation(LinearLayout.VERTICAL);
         layout.setPadding(48, 32, 48, 16);
 
-        // Title field
+        TextView tvLabel = new TextView(getContext());
+        tvLabel.setText("Task Name");
+        tvLabel.setTextColor(Color.parseColor("#64748B"));
+        tvLabel.setTextSize(12f);
+        layout.addView(tvLabel);
+
         EditText etTitle = new EditText(getContext());
-        etTitle.setText(task.getTitle());
-        etTitle.setHint("Task title");
+        etTitle.setText(item.getTitle());
         layout.addView(etTitle);
 
-        // Date button
-        final Calendar cal = Calendar.getInstance();
-        if (task.getDueDate() != null) {
-            cal.setTime(task.getDueDate());
-        }
-        final int[] selectedYear = {cal.get(Calendar.YEAR)};
-        final int[] selectedMonth = {cal.get(Calendar.MONTH)};
-        final int[] selectedDay = {cal.get(Calendar.DAY_OF_MONTH)};
-        final int[] selectedHour = {task.getDueHour()};
-        final int[] selectedMinute = {task.getDueMinute()};
+        final int[] h = {item.getDueHour()};
+        final int[] min = {item.getDueMinute()};
 
-        Button btnDate = new Button(getContext());
-        btnDate.setText(String.format(Locale.getDefault(),
-                "📅 Date: %02d/%02d/%04d",
-                selectedDay[0], selectedMonth[0] + 1, selectedYear[0]));
-        btnDate.setBackgroundTintList(
-                android.content.res.ColorStateList.valueOf(
-                        android.graphics.Color.parseColor("#EFF6FF")));
-        btnDate.setTextColor(
-                android.graphics.Color.parseColor("#2563EB"));
-        btnDate.setOnClickListener(v ->
-                new DatePickerDialog(requireContext(), (dp, y, m, d) -> {
-                    selectedYear[0] = y;
-                    selectedMonth[0] = m;
-                    selectedDay[0] = d;
-                    btnDate.setText(String.format(Locale.getDefault(),
-                            "📅 Date: %02d/%02d/%04d",
-                            d, m + 1, y));
-                }, selectedYear[0], selectedMonth[0],
-                        selectedDay[0]).show());
-        layout.addView(btnDate);
-
-        // Time button
-        Button btnTime = new Button(getContext());
-        btnTime.setText(String.format(Locale.getDefault(),
-                "⏰ Time: %02d:%02d",
-                selectedHour[0], selectedMinute[0]));
-        btnTime.setBackgroundTintList(
-                android.content.res.ColorStateList.valueOf(
-                        android.graphics.Color.parseColor("#EFF6FF")));
-        btnTime.setTextColor(
-                android.graphics.Color.parseColor("#2563EB"));
+        android.widget.Button btnTime = new android.widget.Button(getContext());
+        btnTime.setText(String.format(Locale.getDefault(), "⏰ %02d:%02d", h[0], min[0]));
+        btnTime.setBackgroundTintList(android.content.res.ColorStateList.valueOf(
+                Color.parseColor("#EFF6FF")));
+        btnTime.setTextColor(Color.parseColor("#2563EB"));
         btnTime.setOnClickListener(v ->
-                new TimePickerDialog(requireContext(), (tp, h, min) -> {
-                    selectedHour[0] = h;
-                    selectedMinute[0] = min;
+                new TimePickerDialog(requireContext(), (tp, hour, minute) -> {
+                    h[0] = hour; min[0] = minute;
                     btnTime.setText(String.format(Locale.getDefault(),
-                            "⏰ Time: %02d:%02d", h, min));
-                }, selectedHour[0], selectedMinute[0], true).show());
+                            "⏰ %02d:%02d", hour, minute));
+                }, h[0], min[0], true).show());
         layout.addView(btnTime);
 
         new AlertDialog.Builder(requireContext())
-                .setTitle("✏️ Edit Routine Task")
+                .setTitle("✏️ Edit Routine")
                 .setView(layout)
-                .setPositiveButton("Save", (d, w) -> {
+                .setPositiveButton("Save", (dialog, w) -> {
                     String newTitle = etTitle.getText().toString().trim();
                     if (newTitle.isEmpty()) {
-                        Toast.makeText(getContext(), "Title required",
+                        Toast.makeText(getContext(), "Title cannot be empty",
                                 Toast.LENGTH_SHORT).show();
                         return;
                     }
-
-                    Calendar newCal = Calendar.getInstance();
-                    newCal.set(selectedYear[0], selectedMonth[0],
-                            selectedDay[0], selectedHour[0],
-                            selectedMinute[0], 0);
-
                     Map<String, Object> updates = new HashMap<>();
                     updates.put("title", newTitle);
-                    updates.put("dueDate", newCal.getTime());
-                    updates.put("dueHour", selectedHour[0]);
-                    updates.put("dueMinute", selectedMinute[0]);
-
-                    db.collection("tasks").document(task.getId())
+                    updates.put("dueHour", h[0]);
+                    updates.put("dueMinute", min[0]);
+                    db.collection("routines").document(item.getId())
                             .update(updates)
                             .addOnSuccessListener(a -> {
-                                Toast.makeText(getContext(),
-                                        "✅ Routine task updated!",
+                                Toast.makeText(getContext(), "✅ Updated!",
                                         Toast.LENGTH_SHORT).show();
-                                // Reschedule daily notification
-                                task.setTitle(newTitle);
-                                task.setDueDate(newCal.getTime());
-                                task.setDueHour(selectedHour[0]);
-                                task.setDueMinute(selectedMinute[0]);
-                                scheduleDailyNotification(task);
-                            })
-                            .addOnFailureListener(e ->
-                                    Toast.makeText(getContext(),
-                                            "Failed to update",
-                                            Toast.LENGTH_SHORT).show());
+                                item.setTitle(newTitle);
+                                item.setDueHour(h[0]);
+                                item.setDueMinute(min[0]);
+                                scheduleDailyNotification(item);
+                            });
                 })
                 .setNegativeButton("Cancel", null)
-                // Delete from routine only — sets recurring = false
-                .setNeutralButton("Remove from Routine", (d, w) ->
-                        new AlertDialog.Builder(requireContext())
-                                .setTitle("Remove from Routine?")
-                                .setMessage("This removes \""
-                                        + task.getTitle()
-                                        + "\" from your routine but keeps "
-                                        + "it in your task list.")
-                                .setPositiveButton("Remove", (d2, w2) -> {
-                                    db.collection("tasks")
-                                            .document(task.getId())
-                                            .update("recurring", false)
-                                            .addOnSuccessListener(a ->
-                                                    Toast.makeText(
-                                                                    getContext(),
-                                                                    "Removed from routine",
-                                                                    Toast.LENGTH_SHORT)
-                                                            .show());
-                                    cancelDailyNotification(task);
-                                })
-                                .setNegativeButton("Cancel", null)
-                                .show())
                 .show();
     }
 
-    // ─── Schedule daily notification ───
-    private void scheduleDailyNotification(Task task) {
+    // Deletes from "routines" collection only — tasks collection untouched
+    private void showDeleteDialog(RoutineItem item) {
+        new AlertDialog.Builder(requireContext())
+                .setTitle("Remove from Routine?")
+                .setMessage("\"" + item.getTitle() + "\" will be permanently removed from your routine.")
+                .setPositiveButton("Remove", (d, w) -> {
+                    db.collection("routines").document(item.getId())
+                            .delete()
+                            .addOnSuccessListener(a -> {
+                                cancelDailyNotification(item);
+                                Toast.makeText(getContext(), "Removed from routine",
+                                        Toast.LENGTH_SHORT).show();
+                            });
+                })
+                .setNegativeButton("Cancel", null)
+                .show();
+    }
+
+    // Uses RoutineAlarmReceiver — separate from TaskAlarmReceiver
+    private void scheduleDailyNotification(RoutineItem item) {
         try {
             if (getContext() == null) return;
-            AlarmManager alarmManager = (AlarmManager)
-                    requireContext().getSystemService(
-                            Context.ALARM_SERVICE);
+            AlarmManager am = (AlarmManager) requireContext()
+                    .getSystemService(Context.ALARM_SERVICE);
+            Intent intent = new Intent(requireContext(), RoutineAlarmReceiver.class);
+            intent.putExtra("routine_title", item.getTitle());
+            intent.putExtra("routine_id", item.getId());
+            intent.putExtra("routine_importance", item.getImportance());
+            intent.putExtra("routine_category",
+                    item.getCategory() != null ? item.getCategory() : "Personal");
 
-            Intent intent = new Intent(requireContext(),
-                    TaskAlarmReceiver.class);
-            intent.putExtra("task_title", task.getTitle());
-            intent.putExtra("task_id", task.getId());
-            intent.putExtra("task_importance", task.getImportance());
-            intent.putExtra("task_category",
-                    task.getCategory() != null
-                            ? task.getCategory() : "Personal");
-            intent.putExtra("is_routine", true);
-
-            PendingIntent pendingIntent = PendingIntent.getBroadcast(
+            PendingIntent pi = PendingIntent.getBroadcast(
                     requireContext(),
-                    ("routine_" + task.getId()).hashCode(),
+                    ("routine_notif_" + item.getId()).hashCode(),
                     intent,
-                    PendingIntent.FLAG_UPDATE_CURRENT
-                            | PendingIntent.FLAG_IMMUTABLE);
+                    PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
 
             Calendar cal = Calendar.getInstance();
-            cal.set(Calendar.HOUR_OF_DAY, task.getDueHour());
-            cal.set(Calendar.MINUTE, task.getDueMinute());
+            cal.set(Calendar.HOUR_OF_DAY, item.getDueHour());
+            cal.set(Calendar.MINUTE, item.getDueMinute());
             cal.set(Calendar.SECOND, 0);
-
-            // If time already passed today start tomorrow
-            if (cal.getTimeInMillis() <= System.currentTimeMillis()) {
+            if (cal.getTimeInMillis() <= System.currentTimeMillis())
                 cal.add(Calendar.DAY_OF_YEAR, 1);
-            }
 
-            if (alarmManager != null) {
-                alarmManager.setRepeating(
-                        AlarmManager.RTC_WAKEUP,
-                        cal.getTimeInMillis(),
-                        AlarmManager.INTERVAL_DAY,
-                        pendingIntent);
-            }
+            if (am != null)
+                am.setRepeating(AlarmManager.RTC_WAKEUP,
+                        cal.getTimeInMillis(), AlarmManager.INTERVAL_DAY, pi);
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
 
-    // ─── Cancel daily notification ───
-    private void cancelDailyNotification(Task task) {
+    private void cancelDailyNotification(RoutineItem item) {
         try {
             if (getContext() == null) return;
-            AlarmManager alarmManager = (AlarmManager)
-                    requireContext().getSystemService(
-                            Context.ALARM_SERVICE);
-            Intent intent = new Intent(requireContext(),
-                    TaskAlarmReceiver.class);
-            PendingIntent pendingIntent = PendingIntent.getBroadcast(
+            AlarmManager am = (AlarmManager) requireContext()
+                    .getSystemService(Context.ALARM_SERVICE);
+            Intent intent = new Intent(requireContext(), RoutineAlarmReceiver.class);
+            PendingIntent pi = PendingIntent.getBroadcast(
                     requireContext(),
-                    ("routine_" + task.getId()).hashCode(),
+                    ("routine_notif_" + item.getId()).hashCode(),
                     intent,
-                    PendingIntent.FLAG_UPDATE_CURRENT
-                            | PendingIntent.FLAG_IMMUTABLE);
-            if (alarmManager != null)
-                alarmManager.cancel(pendingIntent);
+                    PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
+            if (am != null) am.cancel(pi);
         } catch (Exception e) {
             e.printStackTrace();
-        }
-    }
-
-    @Override
-    public void onTaskChecked(Task task, boolean isChecked) {
-        if (task != null && task.getId() != null) {
-            db.collection("tasks").document(task.getId())
-                    .update("completed", isChecked);
         }
     }
 }

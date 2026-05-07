@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.cardview.widget.CardView
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginStart="16dp"
+    android:layout_marginEnd="16dp"
+    android:layout_marginBottom="12dp"
+    app:cardCornerRadius="16dp"
+    app:cardElevation="2dp"
+    app:cardBackgroundColor="#FFFFFF">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+
+        <!-- Priority bar -->
+        <View
+            android:id="@+id/routine_priority_bar"
+            android:layout_width="5dp"
+            android:layout_height="match_parent"
+            android:background="#2563EB" />
+
+        <!-- Content -->
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:padding="14dp">
+
+            <TextView
+                android:id="@+id/tv_routine_title"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Routine Task"
+                android:textSize="15sp"
+                android:textStyle="bold"
+                android:textColor="#0F172A" />
+
+            <TextView
+                android:id="@+id/tv_routine_time"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="08:00"
+                android:textSize="12sp"
+                android:textColor="#64748B"
+                android:layout_marginTop="4dp" />
+        </LinearLayout>
+
+        <!-- Actions -->
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:paddingEnd="8dp">
+
+            <!-- Done checkbox -->
+            <CheckBox
+                android:id="@+id/cb_routine_done"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:buttonTint="#22C55E" />
+
+            <!-- Edit pencil -->
+            <ImageView
+                android:id="@+id/iv_routine_edit"
+                android:layout_width="32dp"
+                android:layout_height="32dp"
+                android:src="@android:drawable/ic_menu_edit"
+                android:padding="4dp"
+                android:clickable="true"
+                android:focusable="true"
+                app:tint="#2563EB"
+                android:contentDescription="Edit" />
+
+            <!-- Delete -->
+            <ImageView
+                android:id="@+id/iv_routine_delete"
+                android:layout_width="32dp"
+                android:layout_height="32dp"
+                android:src="@android:drawable/ic_menu_delete"
+                android:padding="4dp"
+                android:clickable="true"
+                android:focusable="true"
+                app:tint="#EF4444"
+                android:contentDescription="Remove" />
+        </LinearLayout>
+    </LinearLayout>
+</androidx.cardview.widget.CardView>

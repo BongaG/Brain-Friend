@@ -43,6 +43,9 @@ import java.util.Calendar;
 import java.util.List;
 import java.util.Locale;
 import android.widget.ImageView;
+import java.util.HashMap;
+import java.util.Map;
+
 
 public class TasksFragment extends Fragment implements TasksAdapter.OnTaskClickListener {
 
@@ -67,6 +70,8 @@ public class TasksFragment extends Fragment implements TasksAdapter.OnTaskClickL
             view = inflater.inflate(R.layout.fragment_tasks, container, false);
         } catch (Exception e) {
             return new View(getContext());
+
+
         }
 
         db = FirebaseFirestore.getInstance();
@@ -357,22 +362,33 @@ public class TasksFragment extends Fragment implements TasksAdapter.OnTaskClickL
                     String taskId = doc.getId();
                     db.collection("tasks").document(taskId).update("id", taskId);
 
-                    // Schedule 10 min alert
                     if (alertEnabled) {
-                        scheduleAlert(taskId, title, dueCal,
-                                finalImportance, finalCategory);
+                        scheduleAlert(taskId, title, dueCal, finalImportance, finalCategory);
                     }
 
-                    // If recurring — schedule daily notification
+                    // If recurring — ALSO save a separate entry to "routines" collection
                     if (isRecurring) {
-                        scheduleDailyRoutineNotification(
-                                taskId, title, selectedHour,
-                                selectedMinute, finalImportance, finalCategory);
+                        Map<String, Object> routineData = new HashMap<>();
+                        routineData.put("title", title);
+                        routineData.put("userId", userId);
+                        routineData.put("category", finalCategory);
+                        routineData.put("importance", finalImportance);
+                        routineData.put("dueHour", selectedHour);
+                        routineData.put("dueMinute", selectedMinute);
+                        routineData.put("completed", false);
+                        routineData.put("createdAt", System.currentTimeMillis());
+
+                        db.collection("routines").add(routineData)
+                                .addOnSuccessListener(routineDoc -> {
+                                    String routineId = routineDoc.getId();
+                                    db.collection("routines").document(routineId)
+                                            .update("id", routineId);
+                                });
                     }
 
                     dialog.dismiss();
                     Toast.makeText(getContext(),
-                            isRecurring ? "✅ Task added to Routine!" : "✅ Task added!",
+                            isRecurring ? "✅ Task added + saved to Routine!" : "✅ Task added!",
                             Toast.LENGTH_SHORT).show();
 
                 }).addOnFailureListener(e ->

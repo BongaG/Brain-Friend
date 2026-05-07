@@ -43,6 +43,12 @@
             android:name=".reminders.TaskAlarmReceiver"
             android:exported="false" />
 
+        <receiver
+            android:name=".reminders.RoutineAlarmReceiver"
+            android:exported="false" />
+
+
+
     </application>
 
 </manifest>
