@@ -4,6 +4,7 @@ import android.app.AlertDialog;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.text.InputFilter;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -33,11 +34,13 @@ public class SettingsFragment extends Fragment {
 
     @Nullable
     @Override
-    public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container,
+    public View onCreateView(@NonNull LayoutInflater inflater,
+                             @Nullable ViewGroup container,
                              @Nullable Bundle savedInstanceState) {
         View view;
         try {
-            view = inflater.inflate(R.layout.fragment_settings, container, false);
+            view = inflater.inflate(R.layout.fragment_settings,
+                    container, false);
         } catch (Exception e) {
             return new View(getContext());
         }
@@ -71,25 +74,15 @@ public class SettingsFragment extends Fragment {
         return view;
     }
 
-    // ─── Dark Mode ───
     private void setupDarkMode(View view) {
-        SwitchMaterial switchDark = view.findViewById(R.id.switch_dark_mode);
-        if (switchDark == null) return;
-
-        // Read saved preference — NOT from AppCompatDelegate
-        boolean isDark = prefs.getBoolean("dark_mode", false);
-        switchDark.setChecked(isDark);
-
-        switchDark.setOnCheckedChangeListener((btn, checked) -> {
-            // Save first
+        SwitchMaterial sw = view.findViewById(R.id.switch_dark_mode);
+        if (sw == null) return;
+        sw.setChecked(prefs.getBoolean("dark_mode", false));
+        sw.setOnCheckedChangeListener((btn, checked) -> {
             prefs.edit().putBoolean("dark_mode", checked).apply();
-
-            // Apply mode
             AppCompatDelegate.setDefaultNightMode(checked
                     ? AppCompatDelegate.MODE_NIGHT_YES
                     : AppCompatDelegate.MODE_NIGHT_NO);
-
-            // Recreate to apply
             requireActivity().recreate();
         });
     }
@@ -100,41 +93,49 @@ public class SettingsFragment extends Fragment {
                     if (!isAdded() || doc == null) return;
                     String name = doc.getString("name");
                     String phone = doc.getString("phone");
-
-                    TextView tvName = view.findViewById(R.id.tv_settings_name);
-                    TextView tvPhone = view.findViewById(R.id.tv_settings_phone);
-                    TextView tvAvatar = view.findViewById(R.id.tv_avatar);
-
-                    if (tvName != null && name != null) tvName.setText(name);
-                    if (tvPhone != null && phone != null) tvPhone.setText(phone);
-                    if (tvAvatar != null && name != null && !name.isEmpty()) {
-                        tvAvatar.setText(
-                                String.valueOf(name.charAt(0)).toUpperCase());
-                    }
+                    TextView tvName =
+                            view.findViewById(R.id.tv_settings_name);
+                    TextView tvPhone =
+                            view.findViewById(R.id.tv_settings_phone);
+                    TextView tvAvatar =
+                            view.findViewById(R.id.tv_avatar);
+                    if (tvName != null && name != null)
+                        tvName.setText(name);
+                    if (tvPhone != null && phone != null)
+                        tvPhone.setText(phone);
+                    if (tvAvatar != null && name != null
+                            && !name.isEmpty())
+                        tvAvatar.setText(String.valueOf(
+                                name.charAt(0)).toUpperCase());
                 });
     }
 
     private void showEditNameDialog() {
         EditText et = new EditText(getContext());
         et.setHint("Enter new name");
+        et.setInputType(android.text.InputType.TYPE_CLASS_TEXT
+                | android.text.InputType.TYPE_TEXT_FLAG_CAP_WORDS);
         et.setPadding(48, 32, 48, 32);
 
         new AlertDialog.Builder(requireContext())
                 .setTitle("Edit Name")
                 .setView(et)
                 .setPositiveButton("Save", (d, w) -> {
-                    String newName = et.getText().toString().trim();
-                    if (newName.isEmpty()) {
-                        Toast.makeText(getContext(), "Name cannot be empty",
+                    String name = et.getText().toString().trim();
+                    if (name.isEmpty()) {
+                        Toast.makeText(getContext(),
+                                "Name cannot be empty",
                                 Toast.LENGTH_SHORT).show();
                         return;
                     }
                     db.collection("users").document(userId)
-                            .update("name", newName)
+                            .update("name", name)
                             .addOnSuccessListener(a -> {
-                                Toast.makeText(getContext(), "Name updated!",
+                                Toast.makeText(getContext(),
+                                        "Name updated!",
                                         Toast.LENGTH_SHORT).show();
-                                if (getView() != null) loadUserData(getView());
+                                if (getView() != null)
+                                    loadUserData(getView());
                             });
                 })
                 .setNegativeButton("Cancel", null)
@@ -143,26 +144,31 @@ public class SettingsFragment extends Fragment {
 
     private void showEditPhoneDialog() {
         EditText et = new EditText(getContext());
-        et.setHint("Enter new phone number");
-        et.setInputType(android.text.InputType.TYPE_CLASS_PHONE);
+        et.setHint("Enter 10 digit phone number");
+        et.setInputType(android.text.InputType.TYPE_CLASS_NUMBER);
         et.setPadding(48, 32, 48, 32);
+        // Enforce exactly 10 digits
+        et.setFilters(new InputFilter[]{new InputFilter.LengthFilter(10)});
 
         new AlertDialog.Builder(requireContext())
                 .setTitle("Edit Phone Number")
                 .setView(et)
                 .setPositiveButton("Save", (d, w) -> {
-                    String newPhone = et.getText().toString().trim();
-                    if (newPhone.isEmpty()) {
-                        Toast.makeText(getContext(), "Phone cannot be empty",
+                    String phone = et.getText().toString().trim();
+                    if (phone.length() != 10) {
+                        Toast.makeText(getContext(),
+                                "Phone number must be exactly 10 digits",
                                 Toast.LENGTH_SHORT).show();
                         return;
                     }
                     db.collection("users").document(userId)
-                            .update("phone", newPhone)
+                            .update("phone", phone)
                             .addOnSuccessListener(a -> {
-                                Toast.makeText(getContext(), "Phone updated!",
+                                Toast.makeText(getContext(),
+                                        "Phone updated!",
                                         Toast.LENGTH_SHORT).show();
-                                if (getView() != null) loadUserData(getView());
+                                if (getView() != null)
+                                    loadUserData(getView());
                             });
                 })
                 .setNegativeButton("Cancel", null)
@@ -170,52 +176,105 @@ public class SettingsFragment extends Fragment {
     }
 
     private void showChangePasswordDialog() {
-        LinearLayout layout = new LinearLayout(getContext());
-        layout.setOrientation(LinearLayout.VERTICAL);
-        layout.setPadding(48, 32, 48, 16);
+        // Clean well designed layout
+        LinearLayout outer = new LinearLayout(getContext());
+        outer.setOrientation(LinearLayout.VERTICAL);
+        outer.setPadding(48, 32, 48, 16);
+        outer.setBackgroundColor(0xFFFFFFFF);
+
+        // Current password
+        TextView lbl1 = new TextView(getContext());
+        lbl1.setText("Current Password");
+        lbl1.setTextSize(13f);
+        lbl1.setTextColor(0xFF64748B);
+        lbl1.setPadding(0, 0, 0, 8);
+        outer.addView(lbl1);
 
         EditText etCurrent = new EditText(getContext());
-        etCurrent.setHint("Current password");
-        etCurrent.setInputType(android.text.InputType.TYPE_CLASS_TEXT
-                | android.text.InputType.TYPE_TEXT_VARIATION_PASSWORD);
-        layout.addView(etCurrent);
+        etCurrent.setHint("••••••••");
+        etCurrent.setInputType(
+                android.text.InputType.TYPE_CLASS_TEXT
+                        | android.text.InputType.TYPE_TEXT_VARIATION_PASSWORD);
+
+        etCurrent.setPadding(24, 16, 24, 16);
+        outer.addView(etCurrent);
+
+        // Divider
+        View div1 = new View(getContext());
+        div1.setLayoutParams(new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT, 1));
+        div1.setBackgroundColor(0xFFE2E8F0);
+        LinearLayout.LayoutParams divParams =
+                new LinearLayout.LayoutParams(
+                        LinearLayout.LayoutParams.MATCH_PARENT, 2);
+        divParams.setMargins(0, 16, 0, 16);
+        div1.setLayoutParams(divParams);
+        outer.addView(div1);
+
+        // New password
+        TextView lbl2 = new TextView(getContext());
+        lbl2.setText("New Password");
+        lbl2.setTextSize(13f);
+        lbl2.setTextColor(0xFF64748B);
+        lbl2.setPadding(0, 0, 0, 8);
+        outer.addView(lbl2);
 
         EditText etNew = new EditText(getContext());
-        etNew.setHint("New password");
-        etNew.setInputType(android.text.InputType.TYPE_CLASS_TEXT
-                | android.text.InputType.TYPE_TEXT_VARIATION_PASSWORD);
-        etNew.setPadding(0, 16, 0, 0);
-        layout.addView(etNew);
+        etNew.setHint("Min 6 characters");
+        etNew.setInputType(
+                android.text.InputType.TYPE_CLASS_TEXT
+                        | android.text.InputType.TYPE_TEXT_VARIATION_PASSWORD);
+        etNew.setPadding(24, 16, 24, 16);
+        outer.addView(etNew);
+
+        // Divider
+        View div2 = new View(getContext());
+        div2.setLayoutParams(divParams);
+        div2.setBackgroundColor(0xFFE2E8F0);
+        outer.addView(div2);
+
+        // Confirm password
+        TextView lbl3 = new TextView(getContext());
+        lbl3.setText("Confirm New Password");
+        lbl3.setTextSize(13f);
+        lbl3.setTextColor(0xFF64748B);
+        lbl3.setPadding(0, 0, 0, 8);
+        outer.addView(lbl3);
 
         EditText etConfirm = new EditText(getContext());
-        etConfirm.setHint("Confirm new password");
-        etConfirm.setInputType(android.text.InputType.TYPE_CLASS_TEXT
-                | android.text.InputType.TYPE_TEXT_VARIATION_PASSWORD);
-        etConfirm.setPadding(0, 16, 0, 0);
-        layout.addView(etConfirm);
+        etConfirm.setHint("Repeat new password");
+        etConfirm.setInputType(
+                android.text.InputType.TYPE_CLASS_TEXT
+                        | android.text.InputType.TYPE_TEXT_VARIATION_PASSWORD);
+        etConfirm.setPadding(24, 16, 24, 16);
+        outer.addView(etConfirm);
 
         new AlertDialog.Builder(requireContext())
-                .setTitle("Change Password")
-                .setView(layout)
-                .setPositiveButton("Update", (d, w) -> {
-                    String current = etCurrent.getText().toString().trim();
+                .setTitle("🔒 Change Password")
+                .setView(outer)
+                .setPositiveButton("Update Password", (d, w) -> {
+                    String current =
+                            etCurrent.getText().toString().trim();
                     String newPass = etNew.getText().toString().trim();
-                    String confirm = etConfirm.getText().toString().trim();
+                    String confirm =
+                            etConfirm.getText().toString().trim();
 
                     if (current.isEmpty() || newPass.isEmpty()
                             || confirm.isEmpty()) {
-                        Toast.makeText(getContext(), "All fields required",
+                        Toast.makeText(getContext(),
+                                "All fields are required",
                                 Toast.LENGTH_SHORT).show();
                         return;
                     }
                     if (!newPass.equals(confirm)) {
-                        Toast.makeText(getContext(), "Passwords do not match",
+                        Toast.makeText(getContext(),
+                                "New passwords do not match",
                                 Toast.LENGTH_SHORT).show();
                         return;
                     }
                     if (newPass.length() < 6) {
                         Toast.makeText(getContext(),
-                                "Password must be 6+ characters",
+                                "Password must be at least 6 characters",
                                 Toast.LENGTH_SHORT).show();
                         return;
                     }
@@ -223,23 +282,28 @@ public class SettingsFragment extends Fragment {
                     FirebaseUser user = mAuth.getCurrentUser();
                     if (user == null || userEmail == null) return;
 
-                    AuthCredential credential = EmailAuthProvider
-                            .getCredential(userEmail, current);
-
-                    user.reauthenticate(credential)
+                    AuthCredential cred =
+                            EmailAuthProvider.getCredential(
+                                    userEmail, current);
+                    user.reauthenticate(cred)
                             .addOnSuccessListener(a ->
                                     user.updatePassword(newPass)
                                             .addOnSuccessListener(b ->
-                                                    Toast.makeText(getContext(),
-                                                            "Password changed!",
-                                                            Toast.LENGTH_SHORT).show())
+                                                    Toast.makeText(
+                                                                    getContext(),
+                                                                    "✅ Password changed successfully!",
+                                                                    Toast.LENGTH_LONG)
+                                                            .show())
                                             .addOnFailureListener(e ->
-                                                    Toast.makeText(getContext(),
-                                                            "Failed: " + e.getMessage(),
-                                                            Toast.LENGTH_SHORT).show()))
+                                                    Toast.makeText(
+                                                                    getContext(),
+                                                                    "Failed: "
+                                                                            + e.getMessage(),
+                                                                    Toast.LENGTH_SHORT)
+                                                            .show()))
                             .addOnFailureListener(e ->
                                     Toast.makeText(getContext(),
-                                            "Current password incorrect",
+                                            "❌ Current password is incorrect",
                                             Toast.LENGTH_SHORT).show());
                 })
                 .setNegativeButton("Cancel", null)
@@ -258,60 +322,69 @@ public class SettingsFragment extends Fragment {
     private void performLogout() {
         mAuth.signOut();
         try {
-            Class<?> loginClass = Class.forName("com.brainfriend.app.LoginActivity");
-            Intent intent = new Intent(requireContext(), loginClass);
+            Class<?> cls = Class.forName(
+                    "com.brainfriend.app.LoginActivity");
+            Intent intent = new Intent(requireContext(), cls);
             intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK
                     | Intent.FLAG_ACTIVITY_CLEAR_TASK);
             startActivity(intent);
         } catch (ClassNotFoundException e) {
-            Toast.makeText(getContext(), "Logged out", Toast.LENGTH_SHORT).show();
+            Toast.makeText(getContext(), "Logged out",
+                    Toast.LENGTH_SHORT).show();
         }
     }
 
     private void showDeleteAccountDialog() {
-        EditText etPassword = new EditText(getContext());
-        etPassword.setHint("Enter your password to confirm");
-        etPassword.setInputType(android.text.InputType.TYPE_CLASS_TEXT
+        EditText et = new EditText(getContext());
+        et.setHint("Enter your password to confirm");
+        et.setInputType(android.text.InputType.TYPE_CLASS_TEXT
                 | android.text.InputType.TYPE_TEXT_VARIATION_PASSWORD);
-        etPassword.setPadding(48, 32, 48, 32);
+        et.setPadding(48, 32, 48, 32);
 
         new AlertDialog.Builder(requireContext())
                 .setTitle("⚠️ Delete Account")
-                .setMessage("This will permanently delete your account " +
-                        "and all your data. This cannot be undone.")
-                .setView(etPassword)
+                .setMessage("This permanently deletes your account "
+                        + "and all data. Cannot be undone.")
+                .setView(et)
                 .setPositiveButton("Delete Forever", (d, w) -> {
-                    String password = etPassword.getText().toString().trim();
-                    if (password.isEmpty()) {
-                        Toast.makeText(getContext(), "Password required",
+                    String pass = et.getText().toString().trim();
+                    if (pass.isEmpty()) {
+                        Toast.makeText(getContext(),
+                                "Password required",
                                 Toast.LENGTH_SHORT).show();
                         return;
                     }
-
                     FirebaseUser user = mAuth.getCurrentUser();
                     if (user == null || userEmail == null) return;
-
-                    AuthCredential credential = EmailAuthProvider
-                            .getCredential(userEmail, password);
-
-                    user.reauthenticate(credential).addOnSuccessListener(a -> {
-                        db.collection("users").document(userId).delete();
-                        db.collection("tasks")
-                                .whereEqualTo("userId", userId)
-                                .get()
-                                .addOnSuccessListener(snap -> {
-                                    for (var doc : snap.getDocuments()) {
-                                        doc.getReference().delete();
-                                    }
-                                });
-                        user.delete().addOnSuccessListener(b -> {
-                            Toast.makeText(getContext(), "Account deleted",
-                                    Toast.LENGTH_SHORT).show();
-                            performLogout();
-                        });
-                    }).addOnFailureListener(e ->
-                            Toast.makeText(getContext(), "Incorrect password",
-                                    Toast.LENGTH_SHORT).show());
+                    AuthCredential cred =
+                            EmailAuthProvider.getCredential(
+                                    userEmail, pass);
+                    user.reauthenticate(cred)
+                            .addOnSuccessListener(a -> {
+                                db.collection("users")
+                                        .document(userId).delete();
+                                db.collection("tasks")
+                                        .whereEqualTo("userId", userId)
+                                        .get()
+                                        .addOnSuccessListener(snap -> {
+                                            for (var doc
+                                                    : snap.getDocuments())
+                                                doc.getReference()
+                                                        .delete();
+                                        });
+                                user.delete().addOnSuccessListener(
+                                        b -> {
+                                            Toast.makeText(getContext(),
+                                                            "Account deleted",
+                                                            Toast.LENGTH_SHORT)
+                                                    .show();
+                                            performLogout();
+                                        });
+                            })
+                            .addOnFailureListener(e ->
+                                    Toast.makeText(getContext(),
+                                            "Incorrect password",
+                                            Toast.LENGTH_SHORT).show());
                 })
                 .setNegativeButton("Cancel", null)
                 .show();

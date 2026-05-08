@@ -15,6 +15,7 @@ android {
         versionName "1.0"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         buildConfigField "String", "ANTHROPIC_API_KEY", "\"${project.findProperty('ANTHROPIC_API_KEY') ?: ''}\""
+        multiDexEnabled true
     }
 
     buildFeatures {
@@ -32,6 +33,23 @@ android {
         sourceCompatibility JavaVersion.VERSION_11
         targetCompatibility JavaVersion.VERSION_11
     }
+
+    packagingOptions {
+        exclude 'META-INF/DEPENDENCIES'
+        exclude 'META-INF/LICENSE'
+        exclude 'META-INF/NOTICE'
+    }
+}
+
+configurations {
+    all {
+        resolutionStrategy {
+            force 'androidx.annotation:annotation:1.7.0'
+            force 'androidx.arch.core:core-common:2.2.0'
+            force 'androidx.arch.core:core-runtime:2.2.0'
+        }
+        exclude group: 'androidx.annotation', module: 'annotation-experimental'
+    }
 }
 
 dependencies {
@@ -42,7 +60,7 @@ dependencies {
     testImplementation libs.junit
     androidTestImplementation libs.ext.junit
     androidTestImplementation libs.espresso.core
-    implementation platform('com.google.firebase:firebase-bom:32.1.1')
+    implementation platform('com.google.firebase:firebase-bom:32.7.0')
     implementation 'com.google.firebase:firebase-auth'
     implementation 'com.google.firebase:firebase-firestore'
     implementation 'com.google.android.material:material:1.11.0'
@@ -52,4 +70,5 @@ dependencies {
     implementation "androidx.lifecycle:lifecycle-livedata:2.7.0"
     implementation "androidx.lifecycle:lifecycle-viewmodel:2.7.0"
     implementation "androidx.recyclerview:recyclerview:1.3.2"
+    implementation 'androidx.multidex:multidex:2.0.1'
 }
